@@ -1,0 +1,38 @@
+# Environment
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Storage (generated at runtime)
+storage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Test & Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Large data files (keep only samples in data/)
+*.sqlite
+*.db
