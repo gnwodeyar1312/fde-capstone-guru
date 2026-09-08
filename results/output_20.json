@@ -1,0 +1,961 @@
+{
+  "metadata": {
+    "input_file": "data/test_batch_20.json",
+    "output_file": "results/output_20.json",
+    "run_timestamp": "2026-09-08T16:04:08.460758+00:00",
+    "total_tickets": 20,
+    "successful": 6,
+    "errors": 14,
+    "elapsed_seconds": 2861.2,
+    "tickets_per_minute": 0.4
+  },
+  "results": [
+    {
+      "ticket_id": "DEV-0001",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-08T15:17:33.520931+00:00",
+      "ground_truth": {
+        "intent": "deployment_failure",
+        "urgency": "high",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-DEPLOY-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "deployment_failure",
+        "intent_confidence": 0.95,
+        "urgency": "high",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket explicitly mentions 'fail during dependency resolution' in builds. This matches the documented troubleshooting topic for 'dependency resolution build failures' under the Deployment category. Although the customer states no code changes were made (suggesting an external factor or platform issue), the specific error type is covered by existing documentation procedures for diagnosing and resolving dependency resolution issues. The urgency is high because the build pipeline is broken, blocking development or deployment workflows."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'deployment_failure' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-DEPLOY-003",
+          "DOC-ONB-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Symptoms",
+            "relevance_score": 0.6109
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Common causes",
+            "relevance_score": 0.5622
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Resolution",
+            "relevance_score": 0.5491
+          },
+          {
+            "doc_id": "DOC-ONB-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.5232
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Notes",
+            "relevance_score": 0.5123
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hi there,\n\nI understand how frustrating it is when builds that were working last week suddenly start failing, especially when you haven't changed any code. I can help you troubleshoot this dependency resolution issue.\n\nBased on our documentation, this specific symptom—where builds previously succeeded but now fail without code changes—is often caused by an unpinned dependency releasing a new incompatible version, a mismatch between the build environment's language runtime and your local machine, or a corrupted dependency cache [DOC-DEPLOY-003].\n\nPlease follow these steps to resolve the issue:\n\n1.  **Pin your dependencies:** Ensure all dependencies are pinned to exact versions and that the lock file is committed to your repository. Unpinned dependencies are the most common cause of this type of failure [DOC-DEPLOY-003].\n2.  **Verify runtime versions:** Compare the language runtime version declared in your build configuration against the version you are using locally to ensure they match [DOC-DEPLOY-003].\n3.  **Clear the build cache:** Go to the settings page, clear the build cache, and trigger a fresh build. This helps rule out any partially written or corrupted artifacts in the cache [DOC-DEPLOY-003].\n4.  **Check registry connectivity:** If a specific dependency is failing to resolve, verify that its registry is reachable from the build network [DOC-DEPLOY-003].\n\nAdditionally, you can review your build logs, as they retain the full resolution output for thirty days, which should help identify exactly which dependency version changed [DOC-DEPLOY-003].\n\nPlease let me know if these steps resolve the issue or if you need further assistance.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-DEPLOY-003"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 1 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1790 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
+    },
+    {
+      "ticket_id": "DEV-0002",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-08T15:17:43.068151+00:00",
+      "ground_truth": {
+        "intent": "api_key_issue",
+        "urgency": "medium",
+        "expected_route": "escalate",
+        "answerable_from_docs": false,
+        "expected_doc_ids": [],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "api_key_issue",
+        "intent_confidence": 0.95,
+        "urgency": "high",
+        "urgency_confidence": 0.9,
+        "answerable_from_docs": false,
+        "answerable_confidence": 0.95,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket describes a specific production API key failing with 401 errors without any user-initiated changes, while other keys work. This is a 'mystery' scenario requiring investigation into the specific key's status (e.g., accidental revocation, expiration, or backend anomaly) rather than a general how-to or known troubleshooting procedure. Since it affects production, the urgency is high. Documentation covers rotation and scopes, but not diagnosing unexplained sudden failures of a specific key."
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Ticket classified as not answerable from documentation (confidence: 0.95). Requires human investigation.",
+        "escalation_target": "tier1_support",
+        "rule_triggered": "not_answerable_from_docs"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-AUTH-004",
+          "DOC-INT-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-AUTH-004",
+            "section_name": "Symptoms",
+            "relevance_score": 0.6707
+          },
+          {
+            "doc_id": "DOC-AUTH-004",
+            "section_name": "Common causes",
+            "relevance_score": 0.5456
+          },
+          {
+            "doc_id": "DOC-AUTH-004",
+            "section_name": "Resolution",
+            "relevance_score": 0.5038
+          },
+          {
+            "doc_id": "DOC-AUTH-004",
+            "section_name": "Notes",
+            "relevance_score": 0.4997
+          },
+          {
+            "doc_id": "DOC-INT-001",
+            "section_name": "Notes",
+            "relevance_score": 0.4859
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "escalated"
+    },
+    {
+      "ticket_id": "DEV-0003",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-08T15:17:50.234575+00:00",
+      "ground_truth": {
+        "intent": "compliance_request",
+        "urgency": "medium",
+        "expected_route": "escalate",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-SEC-003"
+        ],
+        "must_not_auto_respond": true
+      },
+      "predictions": {
+        "intent": "data_export",
+        "intent_confidence": 0.95,
+        "urgency": "medium",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The customer is asking two specific questions: how to export access records and what the retention period is. The documentation explicitly covers 'data export and scheduled extracts' and 'backups/retention/point-in-time restore' under Data management, as well as 'audit logging and compliance evidence' under Security. Since the core request is for information on how to perform an export and verify retention limits, which are documented procedures and policies, this is answerable from docs. The urgency is medium because it is for an auditor (compliance deadline) but not an immediate service outage or security breach."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'data_export' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-SEC-001",
+          "DOC-SEC-003",
+          "DOC-DATA-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Notes",
+            "relevance_score": 0.569
+          },
+          {
+            "doc_id": "DOC-SEC-003",
+            "section_name": "Resolution",
+            "relevance_score": 0.5647
+          },
+          {
+            "doc_id": "DOC-DATA-001",
+            "section_name": "Notes",
+            "relevance_score": 0.5258
+          },
+          {
+            "doc_id": "DOC-SEC-003",
+            "section_name": "Notes",
+            "relevance_score": 0.5085
+          },
+          {
+            "doc_id": "DOC-SEC-003",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5018
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hello,\n\nI understand your auditor requires access records for the last six months. Since you are on an Enterprise plan, I can confirm that this period is within our standard retention window. Audit logs are retained for one year on Enterprise plans [DOC-SEC-001].\n\nYes, you can export these records. Please follow these steps to generate the evidence for your compliance review:\n\n1.  Filter the audit log by actor, resource, and the specific date range required (the last six months). Note that every administrative action includes the user, address, and outcome [DOC-SEC-003].\n2.  Export the relevant period to object storage. Exports are not subject to retention limits, so this will preserve the data for your auditor [DOC-SEC-003].\n3.  Be aware that the export action itself is audited, including the fields selected and the destination [DOC-SEC-003].\n\nPlease note that on Enterprise plans, audit logs capture administrative and configuration changes. If your auditor specifically requires logs of read access to resources, please clarify, as read access is only logged on Business plans for administrative changes, and specific Enterprise read-access logging capabilities may require further configuration or review [DOC-SEC-003].\n\nIf you require retention longer than the one-year Enterprise window in the future, you can configure continuous export to your own storage [DOC-SEC-003].\n\nPlease let me know if you need further assistance with the export process.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-SEC-001",
+          "DOC-SEC-003"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 2 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1592 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
+    },
+    {
+      "ticket_id": "DEV-0004",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-08T15:18:24.824681+00:00",
+      "ground_truth": {
+        "intent": "rollback_request",
+        "urgency": "high",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-DEPLOY-002"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "rollback_request",
+        "intent_confidence": 0.98,
+        "urgency": "high",
+        "urgency_confidence": 0.95,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.95,
+        "must_not_auto_respond": false,
+        "reasoning": "The customer explicitly asks how to revert to an earlier revision because the current release is causing errors. This maps directly to the 'rollback_request' intent. The urgency is high because the production environment is currently experiencing errors, making it a business-critical blocker. The documentation explicitly covers 'rolling back releases' under the Deployment section, so this is answerable from docs."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'rollback_request' with confidence 0.98 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-DEPLOY-002",
+          "DOC-DATA-001",
+          "DOC-DEPLOY-003"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Symptoms",
+            "relevance_score": 0.6237
+          },
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.4841
+          },
+          {
+            "doc_id": "DOC-DATA-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4411
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Resolution",
+            "relevance_score": 0.4281
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Notes",
+            "relevance_score": 0.4178
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hi there,\n\nI understand the urgency of the situation, especially since the release deployed this morning is causing errors. Rolling back is often the safest and fastest way to restore stability while you prepare a fix.\n\nHere are the steps to revert to an earlier revision:\n\n1.  Open the revisions page for your service and identify the last revision that was healthy. [DOC-DEPLOY-002]\n2.  Select **roll back** on that revision. Traffic will move to the previous version within roughly thirty seconds, and no rebuild is required. [DOC-DEPLOY-002]\n3.  **Important:** If your release included a database migration, you must roll the migration back before rolling back the service. If you do not, the older code will encounter a database schema it does not expect, which could cause further errors. [DOC-DEPLOY-002]\n4.  Once the rollback is complete, record the incident and the reason for the rollback before deploying a fix, while the details are still fresh. [DOC-DEPLOY-002]\n\nPlease let me know if you encounter any issues during this process or if you need assistance identifying the correct healthy revision.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-DEPLOY-002"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 1 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1236 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
+    },
+    {
+      "ticket_id": "DEV-0005",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-08T15:18:33.270443+00:00",
+      "ground_truth": {
+        "intent": "feature_request",
+        "urgency": "medium",
+        "expected_route": "escalate",
+        "answerable_from_docs": false,
+        "expected_doc_ids": [],
+        "must_not_auto_respond": true
+      },
+      "predictions": {
+        "intent": "feature_request",
+        "intent_confidence": 0.95,
+        "urgency": "low",
+        "urgency_confidence": 0.9,
+        "answerable_from_docs": false,
+        "answerable_confidence": 1.0,
+        "must_not_auto_respond": true,
+        "reasoning": "The customer is explicitly requesting a new capability ('add per-project spend caps') that does not currently exist, as they note the current limitation is organization-wide. This is a feature request, not a question about existing functionality. Feature requests are never answerable from documentation. The urgency is low because it is a suggestion for improvement rather than a service outage or critical blocker."
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Intent 'feature_request' requires human review (must-not-auto-respond policy). Routing to product_team.",
+        "escalation_target": "product_team",
+        "rule_triggered": "must_not_auto_respond"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-BILL-003",
+          "DOC-ACCT-002",
+          "DOC-API-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-BILL-003",
+            "section_name": "Notes",
+            "relevance_score": 0.6897
+          },
+          {
+            "doc_id": "DOC-ACCT-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.4906
+          },
+          {
+            "doc_id": "DOC-BILL-003",
+            "section_name": "Common causes",
+            "relevance_score": 0.4597
+          },
+          {
+            "doc_id": "DOC-API-001",
+            "section_name": "Notes",
+            "relevance_score": 0.4584
+          },
+          {
+            "doc_id": "DOC-ACCT-002",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4392
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "escalated"
+    },
+    {
+      "ticket_id": "DEV-0006",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199364, Requested 1939. Please try again in 9m22.896s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T15:18:59.227025+00:00",
+      "ground_truth": {
+        "intent": "configuration_help",
+        "urgency": "medium",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-DEPLOY-004",
+          "DOC-ACCT-002"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0007",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198974, Requested 1748. Please try again in 5m11.904s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T15:21:51.490608+00:00",
+      "ground_truth": {
+        "intent": "feature_request",
+        "urgency": "medium",
+        "expected_route": "escalate",
+        "answerable_from_docs": false,
+        "expected_doc_ids": [],
+        "must_not_auto_respond": true
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0008",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198584, Requested 2081. Please try again in 4m47.28s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T15:24:39.833131+00:00",
+      "ground_truth": {
+        "intent": "authentication_failure",
+        "urgency": "medium",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-AUTH-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0009",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199528, Requested 977. Please try again in 3m38.16s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T15:27:28.368115+00:00",
+      "ground_truth": {
+        "intent": "rollback_request",
+        "urgency": "medium",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-DEPLOY-002"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "rollback_request",
+        "intent_confidence": 0.98,
+        "urgency": "high",
+        "urgency_confidence": 0.95,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.95,
+        "must_not_auto_respond": false,
+        "reasoning": "The customer explicitly asks how to revert to a previous revision because the current release is causing errors. This maps directly to the 'rollback_request' intent. The urgency is high because the current deployment is causing errors, indicating a service issue or business-critical blocker. The documentation covers 'rolling back releases' under the Deployment section, making this answerable from docs."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'rollback_request' with confidence 0.98 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-DEPLOY-002",
+          "DOC-DATA-001",
+          "DOC-DEPLOY-003"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5996
+          },
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.5027
+          },
+          {
+            "doc_id": "DOC-DATA-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4332
+          },
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Notes",
+            "relevance_score": 0.432
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Notes",
+            "relevance_score": 0.4238
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0010",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199137, Requested 1719. Please try again in 6m9.792s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T15:33:01.330598+00:00",
+      "ground_truth": {
+        "intent": "configuration_help",
+        "urgency": "low",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-DEPLOY-004",
+          "DOC-ACCT-002"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0011",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198748, Requested 1799. Please try again in 3m56.304s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T15:35:49.953078+00:00",
+      "ground_truth": {
+        "intent": "authentication_failure",
+        "urgency": "medium",
+        "expected_route": "escalate",
+        "answerable_from_docs": false,
+        "expected_doc_ids": [],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0012",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198351, Requested 1792. Please try again in 1m1.776s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T15:38:38.059157+00:00",
+      "ground_truth": {
+        "intent": "data_export",
+        "urgency": "high",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-DATA-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0013",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-08T15:41:29.400489+00:00",
+      "ground_truth": {
+        "intent": "compliance_request",
+        "urgency": "medium",
+        "expected_route": "escalate",
+        "answerable_from_docs": false,
+        "expected_doc_ids": [],
+        "must_not_auto_respond": true
+      },
+      "predictions": {
+        "intent": "compliance_request",
+        "intent_confidence": 0.95,
+        "urgency": "medium",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": false,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": true,
+        "reasoning": "The customer is requesting evidence for a compliance review, which falls under compliance_request. The core issue is that they cannot find specific audit log events in their environment. According to the guidelines, when a customer cannot find expected data or logs in their specific environment, it requires investigation of their system rather than just pointing to documentation, making it not answerable from docs. The urgency is medium because it is a compliance blocker but likely not an immediate service outage or security breach."
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Intent 'compliance_request' requires human review (must-not-auto-respond policy). Routing to compliance_team.",
+        "escalation_target": "compliance_team",
+        "rule_triggered": "must_not_auto_respond"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-SEC-003",
+          "DOC-SEC-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-SEC-003",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5987
+          },
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5212
+          },
+          {
+            "doc_id": "DOC-SEC-003",
+            "section_name": "Common causes",
+            "relevance_score": 0.5168
+          },
+          {
+            "doc_id": "DOC-SEC-003",
+            "section_name": "Resolution",
+            "relevance_score": 0.4878
+          },
+          {
+            "doc_id": "DOC-SEC-003",
+            "section_name": "Notes",
+            "relevance_score": 0.4736
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "escalated"
+    },
+    {
+      "ticket_id": "DEV-0014",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199287, Requested 1735. Please try again in 7m21.504s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T15:44:21.651725+00:00",
+      "ground_truth": {
+        "intent": "sso_configuration",
+        "urgency": "low",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-AUTH-003"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0015",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198893, Requested 2052. Please try again in 6m48.24s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T15:47:09.667006+00:00",
+      "ground_truth": {
+        "intent": "security_incident",
+        "urgency": "high",
+        "expected_route": "escalate",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-SEC-001"
+        ],
+        "must_not_auto_respond": true
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0016",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198504, Requested 1821. Please try again in 2m20.4s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T15:50:00.139302+00:00",
+      "ground_truth": {
+        "intent": "api_key_issue",
+        "urgency": "medium",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-AUTH-004",
+          "DOC-SEC-002"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0017",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198110, Requested 2057. Please try again in 1m12.144s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T15:52:48.243776+00:00",
+      "ground_truth": {
+        "intent": "account_access",
+        "urgency": "low",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-ACCT-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0018",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199398, Requested 1923. Please try again in 9m30.672s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T15:55:38.238218+00:00",
+      "ground_truth": {
+        "intent": "api_usage_question",
+        "urgency": "low",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-API-002",
+          "DOC-API-003"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "api_usage_question",
+        "intent_confidence": 0.95,
+        "urgency": "medium",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The user is asking how to correctly retrieve all data via the API, specifically addressing issues with pagination duplicates and page size limits. The documentation explicitly covers 'pagination and large result sets' under the API section, which provides the procedures and best practices for handling these scenarios. This is a 'how-to' question about API usage rather than a mystery failure requiring account investigation."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'api_usage_question' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-API-002",
+          "DOC-API-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-API-002",
+            "section_name": "Symptoms",
+            "relevance_score": 0.6187
+          },
+          {
+            "doc_id": "DOC-API-002",
+            "section_name": "Common causes",
+            "relevance_score": 0.5473
+          },
+          {
+            "doc_id": "DOC-API-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.511
+          },
+          {
+            "doc_id": "DOC-API-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4191
+          },
+          {
+            "doc_id": "DOC-API-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.4011
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0019",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199004, Requested 1706. Please try again in 5m6.72s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T15:58:35.242227+00:00",
+      "ground_truth": {
+        "intent": "account_access",
+        "urgency": "medium",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-ACCT-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0020",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198612, Requested 1653. Please try again in 1m54.48s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-08T16:01:25.483251+00:00",
+      "ground_truth": {
+        "intent": "sso_configuration",
+        "urgency": "low",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-AUTH-003"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    }
+  ]
+}

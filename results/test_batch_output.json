@@ -1,0 +1,402 @@
+{
+  "metadata": {
+    "input_file": "data/test_batch_5.json",
+    "output_file": "results/test_batch_output.json",
+    "run_timestamp": "2026-09-07T18:44:26.474823+00:00",
+    "total_tickets": 5,
+    "successful": 5,
+    "errors": 0,
+    "elapsed_seconds": 40.7,
+    "tickets_per_minute": 7.4
+  },
+  "results": [
+    {
+      "ticket_id": "DEV-0001",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-07T18:44:02.997629+00:00",
+      "ground_truth": {
+        "intent": "deployment_failure",
+        "urgency": "high",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-DEPLOY-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "deployment_failure",
+        "intent_confidence": 0.95,
+        "urgency": "high",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": false,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket describes a sudden failure in dependency resolution for builds that previously worked, with no code changes made by the customer. This indicates a potential backend issue, registry outage, or platform-side change rather than a user configuration error. While documentation covers 'dependency resolution build failures' as a general topic, the specific context of 'worked last week, failing now with no changes' suggests an account-specific or platform-wide incident requiring investigation into the customer's specific build logs and environment state, rather than a simple how-to fix. Therefore, it is not answerable from static docs. The urgency is high because the build pipeline is broken, blocking development or deployment workflows."
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Ticket classified as not answerable from documentation (confidence: 0.90). Requires human investigation.",
+        "escalation_target": "tier1_support",
+        "rule_triggered": "not_answerable_from_docs"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-DEPLOY-003",
+          "DOC-ONB-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Symptoms",
+            "relevance_score": 0.6109
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Common causes",
+            "relevance_score": 0.5622
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Resolution",
+            "relevance_score": 0.5491
+          },
+          {
+            "doc_id": "DOC-ONB-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.5232
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Notes",
+            "relevance_score": 0.5123
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "escalated"
+    },
+    {
+      "ticket_id": "DEV-0002",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-07T18:44:05.931798+00:00",
+      "ground_truth": {
+        "intent": "api_key_issue",
+        "urgency": "medium",
+        "expected_route": "escalate",
+        "answerable_from_docs": false,
+        "expected_doc_ids": [],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "api_key_issue",
+        "intent_confidence": 0.95,
+        "urgency": "high",
+        "urgency_confidence": 0.9,
+        "answerable_from_docs": false,
+        "answerable_confidence": 0.95,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket describes a specific production API key failing with 401 errors without any customer-side changes, while other keys work. This indicates a potential backend issue, accidental revocation, or account-specific anomaly that requires investigation into the specific key's status and audit logs. It is not a general 'how-to' question about key rotation or usage, so documentation cannot resolve it. The impact is high because it affects production services."
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Ticket classified as not answerable from documentation (confidence: 0.95). Requires human investigation.",
+        "escalation_target": "tier1_support",
+        "rule_triggered": "not_answerable_from_docs"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-AUTH-004",
+          "DOC-INT-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-AUTH-004",
+            "section_name": "Symptoms",
+            "relevance_score": 0.6707
+          },
+          {
+            "doc_id": "DOC-AUTH-004",
+            "section_name": "Common causes",
+            "relevance_score": 0.5456
+          },
+          {
+            "doc_id": "DOC-AUTH-004",
+            "section_name": "Resolution",
+            "relevance_score": 0.5038
+          },
+          {
+            "doc_id": "DOC-AUTH-004",
+            "section_name": "Notes",
+            "relevance_score": 0.4997
+          },
+          {
+            "doc_id": "DOC-INT-001",
+            "section_name": "Notes",
+            "relevance_score": 0.4859
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "escalated"
+    },
+    {
+      "ticket_id": "DEV-0003",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-07T18:44:08.026631+00:00",
+      "ground_truth": {
+        "intent": "compliance_request",
+        "urgency": "medium",
+        "expected_route": "escalate",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-SEC-003"
+        ],
+        "must_not_auto_respond": true
+      },
+      "predictions": {
+        "intent": "compliance_request",
+        "intent_confidence": 0.95,
+        "urgency": "medium",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": false,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": true,
+        "reasoning": "The ticket explicitly mentions an auditor and a compliance review, requesting access records for a specific period. While the topic of 'audit logging and compliance evidence' is covered in the Security documentation, the request involves verifying specific retention policies against a regulatory requirement and potentially exporting account-specific data for an external audit. This typically requires human verification of the specific account's retention status and potentially legal/compliance team input, rather than a simple how-to guide. It is not a security incident (no breach suspected) nor a simple data export request (the primary driver is compliance/audit). Urgency is medium because audits often have deadlines but are rarely immediate service outages."
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Intent 'compliance_request' requires human review (must-not-auto-respond policy). Routing to compliance_team.",
+        "escalation_target": "compliance_team",
+        "rule_triggered": "must_not_auto_respond"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-SEC-001",
+          "DOC-SEC-003",
+          "DOC-DATA-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Notes",
+            "relevance_score": 0.569
+          },
+          {
+            "doc_id": "DOC-SEC-003",
+            "section_name": "Resolution",
+            "relevance_score": 0.5647
+          },
+          {
+            "doc_id": "DOC-DATA-001",
+            "section_name": "Notes",
+            "relevance_score": 0.5258
+          },
+          {
+            "doc_id": "DOC-SEC-003",
+            "section_name": "Notes",
+            "relevance_score": 0.5085
+          },
+          {
+            "doc_id": "DOC-SEC-003",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5018
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "escalated"
+    },
+    {
+      "ticket_id": "DEV-0004",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-07T18:44:10.486933+00:00",
+      "ground_truth": {
+        "intent": "rollback_request",
+        "urgency": "high",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-DEPLOY-002"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "rollback_request",
+        "intent_confidence": 0.98,
+        "urgency": "high",
+        "urgency_confidence": 0.95,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The customer explicitly asks how to revert to an earlier revision because the current release is causing errors. This maps directly to the 'rollback_request' intent. The urgency is high because the service is currently experiencing errors ('causing errors'), indicating a production issue that needs immediate resolution. The documentation covers 'rolling back releases' under the Deployment category, providing actionable steps for this common problem pattern, so it is answerable from docs."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'rollback_request' with confidence 0.98 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-DEPLOY-002",
+          "DOC-DATA-001",
+          "DOC-DEPLOY-003"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Symptoms",
+            "relevance_score": 0.6237
+          },
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.4841
+          },
+          {
+            "doc_id": "DOC-DATA-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4411
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Resolution",
+            "relevance_score": 0.4281
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Notes",
+            "relevance_score": 0.4178
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hi there,\n\nI understand the urgency of the situation, especially since the release deployed this morning is causing errors. Rolling back to a previous stable revision is often the fastest way to restore service while you prepare a fix.\n\nBased on our documentation for Container Service and Functions, here are the steps to revert to an earlier revision:\n\n1.  Open the revisions page for your service and identify the last revision that was healthy. [DOC-DEPLOY-002]\n2.  Select \"roll back\" on that specific revision. Traffic will move to the previous version within roughly thirty seconds, and no rebuild is required. [DOC-DEPLOY-002]\n3.  **Important:** If your release included a database migration, you must roll the migration back before rolling back the service. If you do not, the older code will encounter a database schema it does not expect, which could cause further errors. [DOC-DEPLOY-002]\n4.  Once the rollback is complete, record the incident and the reason for the rollback before deploying a fix, while the details are still fresh. [DOC-DEPLOY-002]\n\nPlease let me know if you encounter any issues during the rollback process or if you need assistance identifying the last healthy revision.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-DEPLOY-002"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 1 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1329 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
+    },
+    {
+      "ticket_id": "DEV-0005",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-07T18:44:14.615058+00:00",
+      "ground_truth": {
+        "intent": "feature_request",
+        "urgency": "medium",
+        "expected_route": "escalate",
+        "answerable_from_docs": false,
+        "expected_doc_ids": [],
+        "must_not_auto_respond": true
+      },
+      "predictions": {
+        "intent": "feature_request",
+        "intent_confidence": 0.95,
+        "urgency": "low",
+        "urgency_confidence": 0.9,
+        "answerable_from_docs": false,
+        "answerable_confidence": 0.95,
+        "must_not_auto_respond": true,
+        "reasoning": "The customer is explicitly requesting a new capability ('Please add per-project spend caps') that does not currently exist, rather than asking how to use existing features or reporting a bug. This is a clear feature request. The urgency is low because it is a suggestion for improvement, not a service outage or critical blocker. It is not answerable from documentation because the feature is not yet available, and the docs only cover existing spend controls."
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Intent 'feature_request' requires human review (must-not-auto-respond policy). Routing to product_team.",
+        "escalation_target": "product_team",
+        "rule_triggered": "must_not_auto_respond"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-BILL-003",
+          "DOC-ACCT-002",
+          "DOC-API-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-BILL-003",
+            "section_name": "Notes",
+            "relevance_score": 0.6897
+          },
+          {
+            "doc_id": "DOC-ACCT-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.4906
+          },
+          {
+            "doc_id": "DOC-BILL-003",
+            "section_name": "Common causes",
+            "relevance_score": 0.4597
+          },
+          {
+            "doc_id": "DOC-API-001",
+            "section_name": "Notes",
+            "relevance_score": 0.4584
+          },
+          {
+            "doc_id": "DOC-ACCT-002",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4392
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "escalated"
+    }
+  ]
+}
