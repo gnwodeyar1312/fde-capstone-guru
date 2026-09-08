@@ -1,0 +1,143 @@
+[
+  {
+    "ticket_id": "DEV-0001",
+    "channel": "chat",
+    "subject": "",
+    "body": "builds that work last week are now fail during dependency resolution. we are having not change our code at all.",
+    "received_at": "2026-05-23T22:43:00Z",
+    "customer_id": "CUST-1131",
+    "customer_name": "Xin Kulkarni",
+    "customer_tier": "standard",
+    "customer_region": "latin_america",
+    "language_fluency": "non_fluent",
+    "labels": {
+      "intent": "deployment_failure",
+      "urgency": "high",
+      "expected_route": "auto_respond",
+      "answerable_from_docs": true,
+      "expected_doc_ids": [
+        "DOC-DEPLOY-001"
+      ],
+      "must_not_auto_respond": false
+    },
+    "history": {
+      "first_contact_resolution": true,
+      "resolution_time_minutes": 30,
+      "csat_rating": 5,
+      "escalated": false,
+      "repeat_contact": false
+    }
+  },
+  {
+    "ticket_id": "DEV-0002",
+    "channel": "chat",
+    "subject": "",
+    "body": "One of our production keys started returning 401 at around yesterday morning without any change on our side. Other keys against the same account are still working.",
+    "received_at": "2026-04-11T15:51:00Z",
+    "customer_id": "CUST-1251",
+    "customer_name": "Kavya Patel",
+    "customer_tier": "business",
+    "customer_region": "latin_america",
+    "language_fluency": "fluent",
+    "labels": {
+      "intent": "api_key_issue",
+      "urgency": "medium",
+      "expected_route": "escalate",
+      "answerable_from_docs": false,
+      "expected_doc_ids": [],
+      "must_not_auto_respond": false
+    },
+    "history": {
+      "first_contact_resolution": false,
+      "resolution_time_minutes": 1076,
+      "csat_rating": 1,
+      "escalated": true,
+      "repeat_contact": false
+    }
+  },
+  {
+    "ticket_id": "DEV-0003",
+    "channel": "docs_comment",
+    "subject": "Evidence for a compliance review",
+    "body": "Our auditor has asked for access records covering the last six months. Can I export these, and is that period within what you retain?",
+    "received_at": "2026-04-29T10:22:00Z",
+    "customer_id": "CUST-1001",
+    "customer_name": "Sanjay Demir",
+    "customer_tier": "enterprise",
+    "customer_region": "asia_pacific",
+    "language_fluency": "fluent",
+    "labels": {
+      "intent": "compliance_request",
+      "urgency": "medium",
+      "expected_route": "escalate",
+      "answerable_from_docs": true,
+      "expected_doc_ids": [
+        "DOC-SEC-003"
+      ],
+      "must_not_auto_respond": true
+    },
+    "history": {
+      "first_contact_resolution": false,
+      "resolution_time_minutes": 538,
+      "csat_rating": 3,
+      "escalated": true,
+      "repeat_contact": true
+    }
+  },
+  {
+    "ticket_id": "DEV-0004",
+    "channel": "chat",
+    "subject": "",
+    "body": "how do I revert to earlier revision? release we put out this morning is causing errors and I better i roll back than try to fix forward. please tell what to do.",
+    "received_at": "2026-05-30T04:58:00Z",
+    "customer_id": "CUST-1059",
+    "customer_name": "Yusuf Demir",
+    "customer_tier": "business",
+    "customer_region": "asia_pacific",
+    "language_fluency": "non_fluent",
+    "labels": {
+      "intent": "rollback_request",
+      "urgency": "high",
+      "expected_route": "auto_respond",
+      "answerable_from_docs": true,
+      "expected_doc_ids": [
+        "DOC-DEPLOY-002"
+      ],
+      "must_not_auto_respond": false
+    },
+    "history": {
+      "first_contact_resolution": true,
+      "resolution_time_minutes": 42,
+      "csat_rating": 1,
+      "escalated": false,
+      "repeat_contact": false
+    }
+  },
+  {
+    "ticket_id": "DEV-0005",
+    "channel": "email",
+    "subject": "Please add per-project spend caps",
+    "body": "It would be very useful to set spend caps per project rather than only for the whole organisation. At the moment one team's overspend affects everyone.",
+    "received_at": "2026-03-01T17:05:00Z",
+    "customer_id": "CUST-1059",
+    "customer_name": "Xin Dubois",
+    "customer_tier": "business",
+    "customer_region": "north_america",
+    "language_fluency": "fluent",
+    "labels": {
+      "intent": "feature_request",
+      "urgency": "medium",
+      "expected_route": "escalate",
+      "answerable_from_docs": false,
+      "expected_doc_ids": [],
+      "must_not_auto_respond": true
+    },
+    "history": {
+      "first_contact_resolution": false,
+      "resolution_time_minutes": 1120,
+      "csat_rating": 4,
+      "escalated": true,
+      "repeat_contact": false
+    }
+  }
+]

@@ -163,9 +163,9 @@ Analyze the following support ticket and classify it.
 - api_usage_question: Questions about how to use CloudServe APIs
 - authentication_failure: Login failures, credential issues, auth errors
 - billing_query: Questions about invoices, charges, payment methods
-- compliance_request: Regulatory compliance questions (GDPR, SOC2, HIPAA, etc.)
+- compliance_request: Requests driven by auditors, regulators, or compliance reviews — even if they involve exporting data or logs. If the REASON is an audit, compliance review, or regulatory requirement, this is compliance_request, not data_export
 - configuration_help: Help configuring CloudServe services or settings
-- data_export: Requests to export or download their data
+- data_export: Requests to export or download data for the customer's OWN operational use (not for auditors or compliance). Pure data export without a compliance/audit context
 - data_residency: Questions about where data is stored geographically
 - database_issue: Problems with managed database services
 - deployment_failure: Application deployment errors or failures
@@ -187,8 +187,52 @@ Analyze the following support ticket and classify it.
 - high: Service is down, security risk, or business-critical blocker needing immediate attention
 
 ## Answerable from Documentation:
-- true: The answer likely exists in CloudServe's official documentation (29 articles covering API guides, deployment, auth, billing, data management, etc.)
-- false: Requires human investigation, account-specific actions, or involves topics not covered in docs
+CloudServe has 29 official documentation articles covering these specific topics:
+- Authentication: login credential errors, MFA setup/recovery, SSO/SAML configuration, API key rotation and scopes
+- Deployment: container health-check failures, rolling back releases, dependency resolution build failures, environment variables and secrets
+- API: rate limits and quota tiers, pagination and large result sets, webhook delivery/retries/signature verification
+- Performance: response latency diagnosis, autoscaling behaviour and instance limits, database connection pool exhaustion
+- Billing: invoice and usage breakdown, changing plans and proration, usage limits/overage/spend controls
+- Data management: data export and scheduled extracts, backups/retention/point-in-time restore, data residency and regional storage
+- Security: suspected account compromise response, exposed secrets and credential rotation, audit logging and compliance evidence
+- Account: team member roles and permissions, organisation setup and project structure
+- Integration: CI pipeline connections, third-party monitoring and log forwarding
+- Onboarding: first deployment walkthrough, migrating existing applications
+
+## How to determine answerable_from_docs:
+"Answerable from docs" means our documentation contains the information needed to answer the customer's core question. It does NOT mean "should auto-respond" — some answerable tickets still need human handling for other reasons.
+
+**Always false (0% answerable):**
+- feature_request: Docs never cover features that don't exist yet.
+- unclear_request: If you can't tell what they're asking, docs can't answer it.
+
+**Almost always true (>85% answerable) — set false only if the specific question falls outside doc coverage:**
+- api_usage_question, data_export, rate_limit, onboarding, billing_query, quota_or_overage, sso_configuration
+
+**Usually true (~65-80%) — decide based on the specific question:**
+- account_access, api_key_issue, authentication_failure, compliance_request, configuration_help, data_residency, database_issue, deployment_failure, integration_help, performance_degradation, rollback_request, security_incident, webhook_issue
+
+**The deciding factor for mixed intents:** Does a documented PROCEDURE or TROUBLESHOOTING GUIDE apply to this ticket's problem type, or is this a MYSTERY requiring investigation of the customer's specific environment?
+
+Set answerable_from_docs = TRUE when:
+- The ticket describes a KNOWN problem type that matches a documented troubleshooting topic (e.g., "dependency resolution build failures," "MFA recovery," "credential rotation after exposure")
+- The customer asks how to perform a task covered by docs (e.g., "how do I roll back," "how do I export data," "how do I set up SSO")
+- Even if the customer describes THEIR specific experience of the problem, if the docs have procedures for that TYPE of problem, it is answerable
+
+Set answerable_from_docs = FALSE when:
+- The problem is a MYSTERY — something unexpectedly broke or changed and the cause is unknown ("key stopped working without any changes on our side," "access not working and we can't figure out why")
+- The issue requires INVESTIGATING the customer's specific account, infrastructure, or data to diagnose
+- The customer cannot find expected data or logs in their environment (needs someone to look at their system)
+- The request is for something the docs don't cover at all
+
+Examples:
+- "Builds are failing during dependency resolution" → true (docs cover dependency resolution build failure troubleshooting)
+- "Our API key started returning 401 without any change on our side" → false (mystery — needs investigation of what happened to their key)
+- "Need to rotate an exposed key without downtime" → true (docs cover exposed secrets and credential rotation procedures)
+- "MFA code keeps getting rejected" → true (docs cover MFA setup/recovery troubleshooting)
+- "Changed our shared account password and now automated jobs are failing" → false (account-specific configuration issue needing investigation)
+- "How do I export access records for our auditor?" → true (docs cover data export and audit logging)
+- "We need to demonstrate read access is logged but can't find the events" → false (needs investigation of their specific audit setup)
 
 ## Instructions:
 1. Read the ticket carefully. Consider both subject and body.
@@ -233,7 +277,45 @@ def get_groq_client() -> OpenAI:
     return OpenAI(
         api_key=GROQ_API_KEY,
         base_url="https://api.groq.com/openai/v1",
+        max_retries=0,  # Disable built-in retry; our _call_with_retry handles backoff
     )
+
+
+# ---------------------------------------------------------------------------
+# Helper: format retrieval context for the classification prompt
+# ---------------------------------------------------------------------------
+
+def _format_retrieval_context(retrieval_result) -> str:
+    """
+    Format retrieval results into a context block for the classifier.
+
+    When retrieval results are available, the classifier sees which docs
+    were actually found and their relevance scores. This lets it make an
+    INFORMED decision about answerable_from_docs instead of guessing.
+
+    The retrieval is local (sentence-transformers + ChromaDB) — free,
+    instant, no API call. Running it before classification costs nothing
+    but gives the classifier the data it needs.
+    """
+    if retrieval_result is None:
+        return "(No retrieval results available — use your best judgment based on the topic list above.)"
+
+    if not retrieval_result.chunks:
+        return "## Retrieval Results:\nNo relevant documentation was found for this ticket. Set answerable_from_docs=false."
+
+    lines = ["## Retrieval Results (from vector search of the actual documentation):"]
+    for i, chunk in enumerate(retrieval_result.chunks):
+        lines.append(
+            f"  {i+1}. [{chunk.doc_id}] \"{chunk.title}\" — section: {chunk.section_name} "
+            f"(relevance: {chunk.relevance_score:.2f})"
+        )
+    lines.append("")
+    lines.append(
+        "If the retrieved documents are relevant to the ticket's question "
+        "(relevance ≥ 0.40), set answerable_from_docs=true. "
+        "If the documents are unrelated or low-relevance, set answerable_from_docs=false."
+    )
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -246,15 +328,16 @@ def classify_ticket(ticket: StandardTicket, client: Optional[OpenAI] = None) -> 
 
     This function:
     1. Builds the classification prompt with the ticket text
-    2. Sends it to the LLM via Groq's API
-    3. Parses the JSON response
-    4. Validates it through the ClassificationResult Pydantic model
-    5. Returns the validated classification
+    2. Includes retrieval context (if available) so the classifier can
+       make an INFORMED decision about answerable_from_docs instead of guessing
+    3. Sends it to the LLM via Groq's API
+    4. Parses the JSON response
+    5. Validates it through the ClassificationResult Pydantic model
+    6. Returns the validated classification
 
     Args:
         ticket: A StandardTicket from the ingest stage
         client: Optional pre-configured OpenAI client (for reuse / testing)
-
     Returns:
         ClassificationResult with intent, urgency, confidence scores, etc.
 
@@ -267,7 +350,9 @@ def classify_ticket(ticket: StandardTicket, client: Optional[OpenAI] = None) -> 
 
     # Build the prompt with the ticket's combined text
     ticket_text = ticket.combined_text()
-    prompt = CLASSIFICATION_PROMPT.format(ticket_text=ticket_text)
+    prompt = CLASSIFICATION_PROMPT.format(
+        ticket_text=ticket_text,
+    )
 
     logger.info("Classifying ticket %s", ticket.ticket_id)
 
