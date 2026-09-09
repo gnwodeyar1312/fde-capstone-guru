@@ -26,8 +26,6 @@ Interview context:
 import json
 import logging
 from pathlib import Path
-from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -38,6 +36,7 @@ logger = logging.getLogger(__name__)
 # Pydantic models — these define the CONTRACT for data flowing through the system
 # ---------------------------------------------------------------------------
 
+
 class GroundTruthLabels(BaseModel):
     """
     Labels attached to tickets for EVALUATION ONLY.
@@ -47,6 +46,7 @@ class GroundTruthLabels(BaseModel):
 
     Stored separately so we can compare system predictions against truth.
     """
+
     intent: str = ""
     urgency: str = ""
     expected_route: str = ""
@@ -57,11 +57,12 @@ class GroundTruthLabels(BaseModel):
 
 class TicketHistory(BaseModel):
     """Historical outcome data — also evaluation-only."""
-    first_contact_resolution: Optional[bool] = None
-    resolution_time_minutes: Optional[int] = None
-    csat_rating: Optional[int] = None
-    escalated: Optional[bool] = None
-    repeat_contact: Optional[bool] = None
+
+    first_contact_resolution: bool | None = None
+    resolution_time_minutes: int | None = None
+    csat_rating: int | None = None
+    escalated: bool | None = None
+    repeat_contact: bool | None = None
 
 
 class StandardTicket(BaseModel):
@@ -85,6 +86,7 @@ class StandardTicket(BaseModel):
         customer_region: Geographic region
         language_fluency: fluent or non_fluent — affects response generation
     """
+
     ticket_id: str
     channel: str
     subject: str = ""
@@ -130,6 +132,7 @@ class StandardTicket(BaseModel):
 # Ingestion result — pairs each ticket with its ground truth for evaluation
 # ---------------------------------------------------------------------------
 
+
 class IngestedTicket(BaseModel):
     """
     Container pairing a StandardTicket with its ground-truth labels.
@@ -138,14 +141,16 @@ class IngestedTicket(BaseModel):
     The `labels` and `history` fields are used ONLY by the evaluation harness
     to score the system's predictions.
     """
+
     ticket: StandardTicket
-    labels: Optional[GroundTruthLabels] = None
-    history: Optional[TicketHistory] = None
+    labels: GroundTruthLabels | None = None
+    history: TicketHistory | None = None
 
 
 # ---------------------------------------------------------------------------
 # Core ingestion functions
 # ---------------------------------------------------------------------------
+
 
 def parse_ticket(raw: dict) -> IngestedTicket:
     """
@@ -212,7 +217,9 @@ def ingest_tickets(input_path: str | Path) -> list[IngestedTicket]:
         raw_tickets = json.load(f)
 
     if not isinstance(raw_tickets, list):
-        raise ValueError(f"Expected a JSON array of tickets, got {type(raw_tickets).__name__}")
+        raise ValueError(  # noqa: TRY004
+            f"Expected a JSON array of tickets, got {type(raw_tickets).__name__}"
+        )
 
     results: list[IngestedTicket] = []
     errors: list[str] = []
@@ -223,13 +230,14 @@ def ingest_tickets(input_path: str | Path) -> list[IngestedTicket]:
             ticket_data = dict(raw)
             ingested = parse_ticket(ticket_data)
             results.append(ingested)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             error_msg = f"Ticket {i} (id={raw.get('ticket_id', '?')}): {e}"
             errors.append(error_msg)
             logger.warning("Skipping invalid ticket: %s", error_msg)
 
     # Log summary statistics
     from collections import Counter
+
     channels = Counter(r.ticket.channel for r in results)
 
     logger.info(

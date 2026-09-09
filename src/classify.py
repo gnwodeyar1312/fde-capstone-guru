@@ -38,12 +38,11 @@ Interview context:
 import json
 import logging
 import re
-from typing import Optional
 
 from openai import OpenAI
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from src.config import GROQ_API_KEY, MODEL_NAME, CONFIDENCE_THRESHOLD
+from src.config import GROQ_API_KEY, MODEL_NAME
 from src.ingest import StandardTicket
 
 logger = logging.getLogger(__name__)
@@ -98,6 +97,7 @@ VALID_URGENCIES = {"low", "medium", "high"}
 # Pydantic model for classification output — the CONTRACT
 # ---------------------------------------------------------------------------
 
+
 class ClassificationResult(BaseModel):
     """
     The output of the classify stage.
@@ -106,6 +106,7 @@ class ClassificationResult(BaseModel):
     this model raises immediately rather than letting bad data flow
     into the retriever or router.
     """
+
     intent: str
     intent_confidence: float = Field(ge=0.0, le=1.0)
     urgency: str
@@ -225,6 +226,11 @@ Set answerable_from_docs = FALSE when:
 - The customer cannot find expected data or logs in their environment (needs someone to look at their system)
 - The request is for something the docs don't cover at all
 
+**IMPORTANT — "not working" ≠ mystery:**
+When a customer says something "isn't working" or they "can't figure out why," that does NOT automatically make it a mystery. Ask: does the documentation have a troubleshooting guide for this TYPE of problem? If yes, the docs CAN answer it even though the customer hasn't diagnosed it yet. The customer not knowing the cause is exactly WHY they need the troubleshooting guide.
+
+True mysteries are when the problem type itself is unusual or unprecedented — not when the customer simply hasn't followed the troubleshooting steps yet.
+
 Examples:
 - "Builds are failing during dependency resolution" → true (docs cover dependency resolution build failure troubleshooting)
 - "Our API key started returning 401 without any change on our side" → false (mystery — needs investigation of what happened to their key)
@@ -233,6 +239,9 @@ Examples:
 - "Changed our shared account password and now automated jobs are failing" → false (account-specific configuration issue needing investigation)
 - "How do I export access records for our auditor?" → true (docs cover data export and audit logging)
 - "We need to demonstrate read access is logged but can't find the events" → false (needs investigation of their specific audit setup)
+- "Staging environment is picking up production config values and we can't figure out why" → true (docs cover environment variables and secrets configuration — the troubleshooting guide addresses config resolution order)
+- "Team member permissions aren't taking effect after we changed their role" → true (docs cover team member roles and permissions — the guide covers permission propagation)
+- "Latency has been gradually increasing and memory usage is high" → true (docs cover response latency diagnosis — the troubleshooting steps cover memory and performance investigation)
 
 ## Instructions:
 1. Read the ticket carefully. Consider both subject and body.
@@ -261,6 +270,7 @@ Respond with ONLY valid JSON in this exact format:
 # Groq client initialization
 # ---------------------------------------------------------------------------
 
+
 def get_groq_client() -> OpenAI:
     """
     Create an OpenAI-compatible client pointing to Groq's API.
@@ -285,6 +295,7 @@ def get_groq_client() -> OpenAI:
 # Helper: format retrieval context for the classification prompt
 # ---------------------------------------------------------------------------
 
+
 def _format_retrieval_context(retrieval_result) -> str:
     """
     Format retrieval results into a context block for the classifier.
@@ -306,7 +317,7 @@ def _format_retrieval_context(retrieval_result) -> str:
     lines = ["## Retrieval Results (from vector search of the actual documentation):"]
     for i, chunk in enumerate(retrieval_result.chunks):
         lines.append(
-            f"  {i+1}. [{chunk.doc_id}] \"{chunk.title}\" — section: {chunk.section_name} "
+            f'  {i + 1}. [{chunk.doc_id}] "{chunk.title}" — section: {chunk.section_name} '
             f"(relevance: {chunk.relevance_score:.2f})"
         )
     lines.append("")
@@ -319,10 +330,125 @@ def _format_retrieval_context(retrieval_result) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Post-classification safety overrides (v3 — fixes DEV-0030 pattern)
+# ---------------------------------------------------------------------------
+
+# Keywords that indicate ACTIVE customer-facing breakage requiring incident
+# response, not just a procedural rollback.  When a rollback_request ticket
+# contains these signals, the system must escalate to a human even though the
+# rollback *procedure* is documented — the root cause still needs investigation.
+_ACTIVE_BREAKAGE_KEYWORDS = [
+    "breaking",
+    "broken",
+    "down",
+    "outage",
+    "incident",
+    "customers affected",
+    "customer-facing",
+    "impacting customers",
+    "production issue",
+    "service disruption",
+    "critical failure",
+    "cannot process",
+    "payments failing",
+    "checkout broken",
+    "orders failing",
+    "500 errors in production",
+]
+
+
+def _apply_answerable_overrides(
+    result: ClassificationResult,
+    ticket_text: str,
+) -> ClassificationResult:
+    """
+    Apply deterministic safety overrides AFTER the LLM classification.
+
+    Why a post-LLM layer?
+    The LLM decides answerable_from_docs based on whether a *procedure*
+    exists in the docs.  But some tickets describe situations where the
+    procedure alone is not enough — the customer needs incident-level
+    human attention even though a how-to guide exists.
+
+    This function catches those cases with keyword heuristics, similar to
+    how must_not_auto_respond is already set deterministically from the
+    intent rather than trusting the LLM.
+
+    Interview context:
+        "Why not just improve the prompt?"
+        → The prompt already explains procedure-vs-mystery, and the LLM
+          follows it well (86% accuracy).  But the remaining failures are
+          *edge cases* where the LLM correctly identifies a procedure but
+          misses the incident signal.  A deterministic keyword check is
+          more reliable for safety-critical overrides than asking the LLM
+          to weigh two competing signals.  Defense in depth.
+    """
+    text_lower = ticket_text.lower()
+
+    # Override 1: rollback_request + active breakage → escalate
+    # Rationale (DEV-0030 pattern):  When a customer says "bad release
+    # breaking checkout," the rollback procedure exists in docs, but the
+    # CAUSE of the bad release needs human investigation.  Sending a
+    # generic rollback how-to while customers can't check out is dangerous.
+    if result.intent == "rollback_request" and result.answerable_from_docs:
+        for keyword in _ACTIVE_BREAKAGE_KEYWORDS:
+            if keyword in text_lower:
+                logger.info(
+                    "Override: rollback_request with active breakage keyword "
+                    "'%s' → answerable_from_docs=False (needs incident response)",
+                    keyword,
+                )
+                result.answerable_from_docs = False
+                result.answerable_confidence = max(
+                    0.3, result.answerable_confidence - 0.3
+                )
+                result.reasoning += (
+                    f" [OVERRIDE: Active breakage detected ('{keyword}'). "
+                    f"Rollback procedure exists in docs but this ticket "
+                    f"describes a live incident needing human investigation.]"
+                )
+                break
+
+    # Override 2: database_issue + active breakage → escalate
+    # Rationale (DEV-0032 pattern):  Connection pool exhaustion with active
+    # impact should not be auto-responded even if docs cover the topic.
+    if result.intent == "database_issue" and result.answerable_from_docs:
+        db_incident_keywords = [
+            "exhausted",
+            "no available connections",
+            "connection refused",
+            "database down",
+            "cannot connect",
+            "production database",
+        ]
+        for keyword in db_incident_keywords:
+            if keyword in text_lower:
+                logger.info(
+                    "Override: database_issue with incident keyword '%s' "
+                    "→ answerable_from_docs=False",
+                    keyword,
+                )
+                result.answerable_from_docs = False
+                result.answerable_confidence = max(
+                    0.3, result.answerable_confidence - 0.3
+                )
+                result.reasoning += (
+                    f" [OVERRIDE: Active database incident detected ('{keyword}'). "
+                    f"Needs human investigation of customer's specific environment.]"
+                )
+                break
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Core classification function
 # ---------------------------------------------------------------------------
 
-def classify_ticket(ticket: StandardTicket, client: Optional[OpenAI] = None) -> ClassificationResult:
+
+def classify_ticket(
+    ticket: StandardTicket, client: OpenAI | None = None
+) -> ClassificationResult:
     """
     Classify a single support ticket using the Groq LLM.
 
@@ -360,11 +486,14 @@ def classify_ticket(ticket: StandardTicket, client: Optional[OpenAI] = None) -> 
     response = client.chat.completions.create(
         model=MODEL_NAME,
         messages=[
-            {"role": "system", "content": "You are a precise support ticket classifier. Always respond with valid JSON only."},
+            {
+                "role": "system",
+                "content": "You are a precise support ticket classifier. Always respond with valid JSON only.",
+            },
             {"role": "user", "content": prompt},
         ],
         temperature=0.1,  # Low temperature for consistent, deterministic classification
-        max_tokens=500,   # Classification doesn't need long responses
+        max_tokens=500,  # Classification doesn't need long responses
     )
 
     raw_response = response.choices[0].message.content.strip()
@@ -375,6 +504,9 @@ def classify_ticket(ticket: StandardTicket, client: Optional[OpenAI] = None) -> 
 
     # Validate through Pydantic — this is where bad predictions get caught
     result = ClassificationResult(**parsed)
+
+    # Apply post-classification safety overrides
+    result = _apply_answerable_overrides(result, ticket_text)
 
     logger.info(
         "Classified %s → intent=%s (%.2f), urgency=%s (%.2f), docs=%s (%.2f), must_not_auto=%s",
@@ -393,7 +525,7 @@ def classify_ticket(ticket: StandardTicket, client: Optional[OpenAI] = None) -> 
 
 def classify_tickets(
     tickets: list[StandardTicket],
-    client: Optional[OpenAI] = None,
+    client: OpenAI | None = None,
 ) -> list[ClassificationResult]:
     """
     Classify a batch of tickets.
@@ -413,24 +545,28 @@ def classify_tickets(
 
     results = []
     for i, ticket in enumerate(tickets):
-        logger.info("Classifying ticket %d/%d: %s", i + 1, len(tickets), ticket.ticket_id)
+        logger.info(
+            "Classifying ticket %d/%d: %s", i + 1, len(tickets), ticket.ticket_id
+        )
         try:
             result = classify_ticket(ticket, client=client)
             results.append(result)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error("Failed to classify %s: %s", ticket.ticket_id, e)
             # Return a low-confidence unclear_request as fallback
             # This ensures the pipeline never crashes on a single bad ticket
-            results.append(ClassificationResult(
-                intent="unclear_request",
-                intent_confidence=0.0,
-                urgency="medium",
-                urgency_confidence=0.0,
-                answerable_from_docs=False,
-                answerable_confidence=0.0,
-                must_not_auto_respond=True,
-                reasoning=f"Classification failed: {e}",
-            ))
+            results.append(
+                ClassificationResult(
+                    intent="unclear_request",
+                    intent_confidence=0.0,
+                    urgency="medium",
+                    urgency_confidence=0.0,
+                    answerable_from_docs=False,
+                    answerable_confidence=0.0,
+                    must_not_auto_respond=True,
+                    reasoning=f"Classification failed: {e}",
+                )
+            )
 
     return results
 
@@ -438,6 +574,7 @@ def classify_tickets(
 # ---------------------------------------------------------------------------
 # Helper: extract JSON from LLM response
 # ---------------------------------------------------------------------------
+
 
 def _extract_json(text: str) -> dict:
     """

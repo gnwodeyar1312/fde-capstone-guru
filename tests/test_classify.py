@@ -8,22 +8,22 @@ Three test classes:
 """
 
 import json
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, patch
 
 from src.classify import (
-    ClassificationResult,
     VALID_INTENTS,
-    MUST_NOT_AUTO_RESPOND_INTENTS,
+    ClassificationResult,
     _extract_json,
     classify_ticket,
 )
 from src.ingest import StandardTicket
 
-
 # ---------------------------------------------------------------------------
 # Test fixtures — reusable test data
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def sample_ticket():
@@ -62,6 +62,7 @@ def security_ticket():
 # ---------------------------------------------------------------------------
 # TestClassificationResult — does the Pydantic model validate correctly?
 # ---------------------------------------------------------------------------
+
 
 class TestClassificationResult:
     """Test the Pydantic output model validation."""
@@ -208,6 +209,7 @@ class TestClassificationResult:
 # TestExtractJson — can we handle messy LLM output?
 # ---------------------------------------------------------------------------
 
+
 class TestExtractJson:
     """Test JSON extraction from various LLM response formats."""
 
@@ -244,6 +246,7 @@ class TestExtractJson:
 # ---------------------------------------------------------------------------
 # TestClassifyTicket — end-to-end with mock LLM
 # ---------------------------------------------------------------------------
+
 
 class TestClassifyTicket:
     """Test the full classify_ticket function with mocked LLM."""

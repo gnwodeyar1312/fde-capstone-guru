@@ -44,9 +44,8 @@ Interview context:
 
 import logging
 from enum import Enum
-from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from src.classify import ClassificationResult
 from src.config import CONFIDENCE_THRESHOLD
@@ -58,8 +57,10 @@ logger = logging.getLogger(__name__)
 # Route decision model
 # ---------------------------------------------------------------------------
 
+
 class RouteAction(str, Enum):
     """The two possible routing outcomes."""
+
     AUTO_RESPOND = "auto_respond"
     ESCALATE = "escalate"
 
@@ -71,9 +72,10 @@ class RouteDecision(BaseModel):
     Every decision carries a reason — this feeds the decision log
     and makes the system auditable.
     """
+
     action: RouteAction
     reason: str
-    escalation_target: Optional[str] = None  # Which team to escalate to
+    escalation_target: str | None = None  # Which team to escalate to
     confidence_met: bool = True  # Whether confidence was above threshold
     rule_triggered: str = ""  # Which rule caused the decision
 
@@ -102,9 +104,10 @@ ESCALATION_TARGETS = {
 # Core routing function
 # ---------------------------------------------------------------------------
 
+
 def route_ticket(
     classification: ClassificationResult,
-    threshold: Optional[float] = None,
+    threshold: float | None = None,
 ) -> RouteDecision:
     """
     Route a classified ticket to auto-respond or escalate.
@@ -142,7 +145,9 @@ def route_ticket(
         )
         logger.info(
             "Route: ESCALATE (must_not_auto_respond) → %s | intent=%s, conf=%.2f",
-            target, classification.intent, classification.intent_confidence,
+            target,
+            classification.intent,
+            classification.intent_confidence,
         )
         return decision
 
@@ -163,7 +168,8 @@ def route_ticket(
         )
         logger.info(
             "Route: ESCALATE (not answerable) | intent=%s, answerable_conf=%.2f",
-            classification.intent, classification.answerable_confidence,
+            classification.intent,
+            classification.answerable_confidence,
         )
         return decision
 
@@ -184,7 +190,9 @@ def route_ticket(
         )
         logger.info(
             "Route: ESCALATE (low confidence %.2f < %.2f) | intent=%s",
-            classification.intent_confidence, threshold, classification.intent,
+            classification.intent_confidence,
+            threshold,
+            classification.intent,
         )
         return decision
 
@@ -201,6 +209,7 @@ def route_ticket(
     )
     logger.info(
         "Route: AUTO_RESPOND | intent=%s, conf=%.2f, answerable=True",
-        classification.intent, classification.intent_confidence,
+        classification.intent,
+        classification.intent_confidence,
     )
     return decision

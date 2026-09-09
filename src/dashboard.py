@@ -32,16 +32,16 @@ Interview context:
       affect performance.
 """
 
-import streamlit as st
 import json
 import os
 import sys
 from pathlib import Path
 
+import streamlit as st
+
 # Add project root to path so we can import monitoring
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.monitoring import compute_metrics
-
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -57,6 +57,7 @@ st.set_page_config(
 # ---------------------------------------------------------------------------
 # Data loading
 # ---------------------------------------------------------------------------
+
 
 @st.cache_data
 def load_results(file_path: str) -> dict:
@@ -85,7 +86,9 @@ st.sidebar.markdown("---")
 # File selection
 result_files = discover_result_files()
 if not result_files:
-    st.error("No result files found in results/ directory. Run the evaluation harness first.")
+    st.error(
+        "No result files found in results/ directory. Run the evaluation harness first."
+    )
     st.stop()
 
 selected_file = st.sidebar.selectbox(
@@ -115,16 +118,27 @@ st.caption(f"Run: {ri['timestamp']}  |  Input: {ri['input_file']}")
 # ---- KPI Row ----
 col1, col2, col3, col4, col5 = st.columns(5)
 
-col1.metric("Intent Accuracy", f"{acc['intent']:.1f}%",
-            f"{acc['intent_correct']}/{acc['intent_total']}")
-col2.metric("Answerable Accuracy", f"{acc['answerable']:.1f}%",
-            f"{acc['answerable_correct']}/{acc['answerable_total']}")
-col3.metric("Route Accuracy", f"{acc['route']:.1f}%",
-            f"{acc['route_correct']}/{acc['route_total']}")
-col4.metric("Error Rate", f"{ri['error_rate']:.1f}%",
-            f"{ri['failed']} failed")
-col5.metric("Throughput", f"{ri['tickets_per_minute']:.1f}/min",
-            f"{ri['elapsed_seconds']:.0f}s total")
+col1.metric(
+    "Intent Accuracy",
+    f"{acc['intent']:.1f}%",
+    f"{acc['intent_correct']}/{acc['intent_total']}",
+)
+col2.metric(
+    "Answerable Accuracy",
+    f"{acc['answerable']:.1f}%",
+    f"{acc['answerable_correct']}/{acc['answerable_total']}",
+)
+col3.metric(
+    "Route Accuracy",
+    f"{acc['route']:.1f}%",
+    f"{acc['route_correct']}/{acc['route_total']}",
+)
+col4.metric("Error Rate", f"{ri['error_rate']:.1f}%", f"{ri['failed']} failed")
+col5.metric(
+    "Throughput",
+    f"{ri['tickets_per_minute']:.1f}/min",
+    f"{ri['elapsed_seconds']:.0f}s total",
+)
 
 st.markdown("---")
 
@@ -137,13 +151,15 @@ if pi:
 
     intent_data = []
     for intent, stats in pi.items():
-        intent_data.append({
-            "Intent": intent,
-            "Count": stats["count"],
-            "Intent Acc %": stats["intent_accuracy"],
-            "Answerable Acc %": stats["answerable_accuracy"],
-            "Route Acc %": stats["route_accuracy"],
-        })
+        intent_data.append(
+            {
+                "Intent": intent,
+                "Count": stats["count"],
+                "Intent Acc %": stats["intent_accuracy"],
+                "Answerable Acc %": stats["answerable_accuracy"],
+                "Route Acc %": stats["route_accuracy"],
+            }
+        )
 
     df_intent = pd.DataFrame(intent_data)
 
@@ -152,17 +168,21 @@ if pi:
 
     with col_chart:
         st.bar_chart(
-            df_intent.set_index("Intent")[["Intent Acc %", "Answerable Acc %", "Route Acc %"]],
+            df_intent.set_index("Intent")[
+                ["Intent Acc %", "Answerable Acc %", "Route Acc %"]
+            ],
             height=400,
         )
 
     with col_table:
         st.dataframe(
-            df_intent.style.format({
-                "Intent Acc %": "{:.1f}",
-                "Answerable Acc %": "{:.1f}",
-                "Route Acc %": "{:.1f}",
-            }),
+            df_intent.style.format(
+                {
+                    "Intent Acc %": "{:.1f}",
+                    "Answerable Acc %": "{:.1f}",
+                    "Route Acc %": "{:.1f}",
+                }
+            ),
             use_container_width=True,
             hide_index=True,
         )
@@ -183,32 +203,42 @@ with col_route:
         "Count": [route["auto_respond"], route["escalate"]],
     }
     import pandas as pd
+
     df_route = pd.DataFrame(route_data)
     st.bar_chart(df_route.set_index("Decision"), height=250)
 
-    st.markdown(f"**Must-not-auto compliance:** "
-                f"{route['must_not_auto_correct']}/{route['must_not_auto_total']} "
-                f"({route['must_not_auto_compliance']:.1f}%)")
+    st.markdown(
+        f"**Must-not-auto compliance:** "
+        f"{route['must_not_auto_correct']}/{route['must_not_auto_total']} "
+        f"({route['must_not_auto_compliance']:.1f}%)"
+    )
 
 with col_guard:
     st.subheader("Guardrail Results")
     gr = metrics["guardrails"]
 
-    st.metric("Overall Pass Rate", f"{gr['pass_rate']:.1f}%",
-              f"{gr['total_passed']}/{gr['total_checked']}")
+    st.metric(
+        "Overall Pass Rate",
+        f"{gr['pass_rate']:.1f}%",
+        f"{gr['total_passed']}/{gr['total_checked']}",
+    )
 
     per_check = gr.get("per_check", {})
     if per_check:
         check_data = []
         for name, stats in per_check.items():
             total = stats["passed"] + stats["failed"]
-            check_data.append({
-                "Check": name,
-                "Passed": stats["passed"],
-                "Failed": stats["failed"],
-                "Rate": f"{stats['passed'] / max(total, 1) * 100:.0f}%",
-            })
-        st.dataframe(pd.DataFrame(check_data), use_container_width=True, hide_index=True)
+            check_data.append(
+                {
+                    "Check": name,
+                    "Passed": stats["passed"],
+                    "Failed": stats["failed"],
+                    "Rate": f"{stats['passed'] / max(total, 1) * 100:.0f}%",
+                }
+            )
+        st.dataframe(
+            pd.DataFrame(check_data), use_container_width=True, hide_index=True
+        )
 
 st.markdown("---")
 
@@ -235,7 +265,7 @@ if len(result_files) >= 2:
     compare_files = st.multiselect(
         "Select files to compare",
         result_files,
-        default=result_files[:min(3, len(result_files))],
+        default=result_files[: min(3, len(result_files))],
         format_func=lambda x: Path(x).name,
     )
 
@@ -243,15 +273,17 @@ if len(result_files) >= 2:
         compare_data = []
         for f in compare_files:
             m = load_results(f)
-            compare_data.append({
-                "Run": Path(f).name,
-                "Tickets": m["run_info"]["successful"],
-                "Intent %": m["accuracy"]["intent"],
-                "Answerable %": m["accuracy"]["answerable"],
-                "Route %": m["accuracy"]["route"],
-                "Error Rate %": m["run_info"]["error_rate"],
-                "Speed (t/min)": m["run_info"]["tickets_per_minute"],
-            })
+            compare_data.append(
+                {
+                    "Run": Path(f).name,
+                    "Tickets": m["run_info"]["successful"],
+                    "Intent %": m["accuracy"]["intent"],
+                    "Answerable %": m["accuracy"]["answerable"],
+                    "Route %": m["accuracy"]["route"],
+                    "Error Rate %": m["run_info"]["error_rate"],
+                    "Speed (t/min)": m["run_info"]["tickets_per_minute"],
+                }
+            )
         df_compare = pd.DataFrame(compare_data)
         st.dataframe(df_compare, use_container_width=True, hide_index=True)
 

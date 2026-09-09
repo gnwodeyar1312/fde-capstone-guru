@@ -7,16 +7,15 @@ a comment — run them after `build_vector_store()` on your machine.
 """
 
 import json
-import pytest
-from unittest.mock import patch, MagicMock
 from pathlib import Path
 
-from src.retrieve import (
-    _chunk_document,
-    RetrievedChunk,
-    RetrievalResult,
-)
+import pytest
 
+from src.retrieve import (
+    RetrievalResult,
+    RetrievedChunk,
+    _chunk_document,
+)
 
 # ---------------------------------------------------------------------------
 # Test data
@@ -57,6 +56,7 @@ MINIMAL_DOC = {
 # ---------------------------------------------------------------------------
 # Chunking tests
 # ---------------------------------------------------------------------------
+
 
 class TestChunkDocument:
     """Tests for _chunk_document — the section-based chunking logic."""
@@ -126,7 +126,9 @@ class TestChunkDocument:
         total_chunks = 0
         for doc in docs:
             chunks = _chunk_document(doc)
-            assert len(chunks) == 4, f"{doc['doc_id']} produced {len(chunks)} chunks, expected 4"
+            assert len(chunks) == 4, (
+                f"{doc['doc_id']} produced {len(chunks)} chunks, expected 4"
+            )
             total_chunks += len(chunks)
 
         assert total_chunks == 116
@@ -136,14 +138,18 @@ class TestChunkDocument:
 # RetrievedChunk model tests
 # ---------------------------------------------------------------------------
 
+
 class TestRetrievedChunk:
     """Tests for the RetrievedChunk Pydantic model."""
 
     def test_relevance_score_perfect_match(self):
         """Distance 0 → relevance 1.0."""
         chunk = RetrievedChunk(
-            doc_id="DOC-TEST-001", title="Test", category="test",
-            section_name="Symptoms", content="test content",
+            doc_id="DOC-TEST-001",
+            title="Test",
+            category="test",
+            section_name="Symptoms",
+            content="test content",
             similarity_score=0.0,
         )
         assert chunk.relevance_score == 1.0
@@ -151,8 +157,11 @@ class TestRetrievedChunk:
     def test_relevance_score_moderate_match(self):
         """Distance 1.0 → relevance 0.5."""
         chunk = RetrievedChunk(
-            doc_id="DOC-TEST-001", title="Test", category="test",
-            section_name="Symptoms", content="test content",
+            doc_id="DOC-TEST-001",
+            title="Test",
+            category="test",
+            section_name="Symptoms",
+            content="test content",
             similarity_score=1.0,
         )
         assert chunk.relevance_score == 0.5
@@ -160,8 +169,11 @@ class TestRetrievedChunk:
     def test_relevance_score_weak_match(self):
         """Distance 2.0 → relevance ~0.33."""
         chunk = RetrievedChunk(
-            doc_id="DOC-TEST-001", title="Test", category="test",
-            section_name="Symptoms", content="test content",
+            doc_id="DOC-TEST-001",
+            title="Test",
+            category="test",
+            section_name="Symptoms",
+            content="test content",
             similarity_score=2.0,
         )
         assert abs(chunk.relevance_score - 0.333) < 0.01
@@ -170,6 +182,7 @@ class TestRetrievedChunk:
 # ---------------------------------------------------------------------------
 # RetrievalResult model tests
 # ---------------------------------------------------------------------------
+
 
 class TestRetrievalResult:
     """Tests for the RetrievalResult Pydantic model."""
@@ -183,16 +196,28 @@ class TestRetrievalResult:
         """unique_doc_ids should deduplicate while preserving order."""
         chunks = [
             RetrievedChunk(
-                doc_id="DOC-A", title="A", category="test",
-                section_name="Symptoms", content="a", similarity_score=0.1,
+                doc_id="DOC-A",
+                title="A",
+                category="test",
+                section_name="Symptoms",
+                content="a",
+                similarity_score=0.1,
             ),
             RetrievedChunk(
-                doc_id="DOC-A", title="A", category="test",
-                section_name="Resolution", content="b", similarity_score=0.2,
+                doc_id="DOC-A",
+                title="A",
+                category="test",
+                section_name="Resolution",
+                content="b",
+                similarity_score=0.2,
             ),
             RetrievedChunk(
-                doc_id="DOC-B", title="B", category="test",
-                section_name="Symptoms", content="c", similarity_score=0.3,
+                doc_id="DOC-B",
+                title="B",
+                category="test",
+                section_name="Symptoms",
+                content="c",
+                similarity_score=0.3,
             ),
         ]
         result = RetrievalResult(query="test", chunks=chunks)

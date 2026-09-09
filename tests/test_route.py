@@ -6,13 +6,14 @@ These are pure logic tests — no LLM or API calls needed.
 """
 
 import pytest
-from src.classify import ClassificationResult
-from src.route import route_ticket, RouteAction, RouteDecision
 
+from src.classify import ClassificationResult
+from src.route import RouteAction, RouteDecision, route_ticket
 
 # ---------------------------------------------------------------------------
 # Helper to build ClassificationResult quickly
 # ---------------------------------------------------------------------------
+
 
 def make_classification(
     intent="billing_query",
@@ -38,15 +39,19 @@ def make_classification(
 # Rule 1: Must-not-auto-respond intents
 # ---------------------------------------------------------------------------
 
+
 class TestMustNotAutoRespond:
     """Rule 1: These four intents ALWAYS escalate, regardless of confidence."""
 
-    @pytest.mark.parametrize("intent,expected_target", [
-        ("compliance_request", "compliance_team"),
-        ("security_incident", "security_team"),
-        ("feature_request", "product_team"),
-        ("unclear_request", "tier1_support"),
-    ])
+    @pytest.mark.parametrize(
+        "intent,expected_target",
+        [
+            ("compliance_request", "compliance_team"),
+            ("security_incident", "security_team"),
+            ("feature_request", "product_team"),
+            ("unclear_request", "tier1_support"),
+        ],
+    )
     def test_must_not_auto_respond_intents(self, intent, expected_target):
         c = make_classification(intent=intent, intent_confidence=0.99)
         r = route_ticket(c)
@@ -69,6 +74,7 @@ class TestMustNotAutoRespond:
 # ---------------------------------------------------------------------------
 # Rule 2: Not answerable from docs
 # ---------------------------------------------------------------------------
+
 
 class TestNotAnswerableFromDocs:
     """Rule 2: If docs can't answer it, escalate."""
@@ -96,6 +102,7 @@ class TestNotAnswerableFromDocs:
 # ---------------------------------------------------------------------------
 # Rule 3: Low confidence
 # ---------------------------------------------------------------------------
+
 
 class TestLowConfidence:
     """Rule 3: Below threshold → escalate."""
@@ -127,6 +134,7 @@ class TestLowConfidence:
 # Rule 4: All checks pass → auto-respond
 # ---------------------------------------------------------------------------
 
+
 class TestAutoRespond:
     """Rule 4: When everything checks out, auto-respond."""
 
@@ -151,6 +159,7 @@ class TestAutoRespond:
 # ---------------------------------------------------------------------------
 # Rule priority ordering
 # ---------------------------------------------------------------------------
+
 
 class TestRulePriority:
     """Verify that rules are applied in the correct priority order."""
@@ -188,6 +197,7 @@ class TestRulePriority:
 # ---------------------------------------------------------------------------
 # RouteDecision model tests
 # ---------------------------------------------------------------------------
+
 
 class TestRouteDecision:
     """Tests for the RouteDecision Pydantic model."""

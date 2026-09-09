@@ -1,0 +1,1170 @@
+{
+  "metadata": {
+    "input_file": "data/test_rerun_21.json",
+    "output_file": "results/output_rerun_21.json",
+    "run_timestamp": "2026-09-09T07:35:17.400254+00:00",
+    "total_tickets": 21,
+    "successful": 9,
+    "errors": 12,
+    "elapsed_seconds": 2509.5,
+    "tickets_per_minute": 0.5
+  },
+  "results": [
+    {
+      "ticket_id": "DEV-0004",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-09T06:54:04.286366+00:00",
+      "ground_truth": {
+        "intent": "rollback_request",
+        "urgency": "high",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-DEPLOY-002"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "rollback_request",
+        "intent_confidence": 0.98,
+        "urgency": "high",
+        "urgency_confidence": 0.95,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.95,
+        "must_not_auto_respond": false,
+        "reasoning": "The customer explicitly requests to revert a release that is causing errors, which maps directly to rollback_request. The urgency is high because the current release is causing active errors, impacting service stability. The documentation covers 'rolling back releases' under the Deployment section, making this answerable from docs."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'rollback_request' with confidence 0.98 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-DEPLOY-002",
+          "DOC-DATA-001",
+          "DOC-DEPLOY-003"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Symptoms",
+            "relevance_score": 0.6237
+          },
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.4841
+          },
+          {
+            "doc_id": "DOC-DATA-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4411
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Resolution",
+            "relevance_score": 0.4281
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Notes",
+            "relevance_score": 0.4178
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "I understand the urgency of the situation, and I am sorry to hear that this morning's release is causing errors. Rolling back is often the safest immediate step to restore stability. Here are the steps to revert to an earlier revision:\n\n1. Open the revisions page for your service and identify the last revision that was healthy [DOC-DEPLOY-002].\n2. Select \"roll back\" on that specific revision. Traffic will move to the older version within roughly thirty seconds, and no rebuild is required [DOC-DEPLOY-002].\n3. If your release included a database migration, you must roll the migration back before rolling back the service code. If you do not, the older code will encounter a database schema it does not expect, which could cause further errors [DOC-DEPLOY-002].\n4. Once the rollback is complete, please record the incident and the reason for the rollback before you begin working on a fix, while the details are still fresh [DOC-DEPLOY-002].\n\nPlease let me know if you encounter any issues during the rollback process or if you need assistance identifying the last healthy revision.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-DEPLOY-002"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 1 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1212 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
+    },
+    {
+      "ticket_id": "DEV-0009",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-09T06:54:13.505866+00:00",
+      "ground_truth": {
+        "intent": "rollback_request",
+        "urgency": "medium",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-DEPLOY-002"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "rollback_request",
+        "intent_confidence": 0.98,
+        "urgency": "high",
+        "urgency_confidence": 0.95,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.95,
+        "must_not_auto_respond": false,
+        "reasoning": "The customer explicitly asks how to revert to a previous revision because the current release is causing errors. This maps directly to the 'rollback_request' intent. The urgency is high because the current deployment is causing errors, indicating a service impact or business-critical blocker. The documentation covers 'rolling back releases' under the Deployment section, making this answerable from docs."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'rollback_request' with confidence 0.98 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-DEPLOY-002",
+          "DOC-DATA-001",
+          "DOC-DEPLOY-003"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5996
+          },
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.5027
+          },
+          {
+            "doc_id": "DOC-DATA-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4332
+          },
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Notes",
+            "relevance_score": 0.432
+          },
+          {
+            "doc_id": "DOC-DEPLOY-003",
+            "section_name": "Notes",
+            "relevance_score": 0.4238
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hi there,\n\nI understand how urgent it is to resolve the errors from this morning's release. Rolling back to a previous revision is often the fastest way to restore stability while you prepare a fix.\n\nBased on our documentation for Container Service and Functions, here are the steps to revert to an earlier revision:\n\n1.  Open the revisions page for your service and identify the last revision that was healthy [DOC-DEPLOY-002].\n2.  Select **Roll back** on that specific revision. Traffic will move to the previous version within roughly thirty seconds, and no rebuild is required [DOC-DEPLOY-002].\n3.  **Important:** If your release included a database migration, you must roll the migration back *before* rolling back the service. If you do not, the older code will encounter a database schema it does not expect [DOC-DEPLOY-002].\n4.  Once the rollback is complete, record the incident and the reason for the rollback before deploying a fix, while the details are still fresh [DOC-DEPLOY-002].\n\nPlease note that a rollback restores the container image and its configuration together, but it does **not** restore any data changes [DOC-DEPLOY-002].\n\nIf you encounter any issues during this process or if your service type is not covered by these steps, please let us know, and a specialist will review your ticket.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-DEPLOY-002"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 1 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1440 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
+    },
+    {
+      "ticket_id": "DEV-0010",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-09T06:54:22.146361+00:00",
+      "ground_truth": {
+        "intent": "configuration_help",
+        "urgency": "low",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-DEPLOY-004",
+          "DOC-ACCT-002"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "configuration_help",
+        "intent_confidence": 0.95,
+        "urgency": "medium",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket describes a configuration issue where staging is inheriting production values. This falls under configuration_help. The documentation explicitly covers 'environment variables and secrets' and configuration resolution order, which is the standard troubleshooting path for this type of problem. It is not a mystery requiring unique investigation because the mechanism (config override/resolution) is a known, documented area. Urgency is medium because it affects the staging environment (inconvenience/testing blocker) but does not impact production service availability or security."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'configuration_help' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-DEPLOY-004",
+          "DOC-DEPLOY-002",
+          "DOC-SEC-002",
+          "DOC-ONB-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-DEPLOY-004",
+            "section_name": "Common causes",
+            "relevance_score": 0.5152
+          },
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Common causes",
+            "relevance_score": 0.4867
+          },
+          {
+            "doc_id": "DOC-SEC-002",
+            "section_name": "Common causes",
+            "relevance_score": 0.4754
+          },
+          {
+            "doc_id": "DOC-ONB-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.4666
+          },
+          {
+            "doc_id": "DOC-DEPLOY-004",
+            "section_name": "Resolution",
+            "relevance_score": 0.4665
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hello,\n\nI understand how frustrating it is when your staging environment unexpectedly picks up production configuration values. This can lead to significant confusion and potential security risks. Based on our documentation, here are the most likely causes and steps to resolve this issue.\n\n**Common Causes**\n*   The variable may have been set at the project scope but is being read at the service scope. [DOC-DEPLOY-004]\n*   An environment override may exist that is not visible on the main settings page. [DOC-DEPLOY-004]\n*   Configuration may have been committed directly to the codebase rather than referenced from the environment. [DOC-SEC-002]\n\n**Resolution Steps**\nPlease follow these steps to identify and correct the override:\n\n1.  **Check Variable Scope:** Verify the scope at which the variable was defined. Note that service scope overrides project scope, and project scope overrides organisation defaults. [DOC-DEPLOY-004]\n2.  **Review Environment Overrides:** Navigate to the environment overrides page. This page lists values that differ from the defaults for each specific environment, which will help you locate the hidden override. [DOC-DEPLOY-004]\n3.  **Audit Configuration Source:** Ensure that sensitive configuration is not committed to your code repository. Instead, reference it from the environment or store it as a secret. [DOC-SEC-002]\n4.  **Redeploy the Service:** After making any configuration changes, you must redeploy the service. Running containers do not pick up new values without a restart. [DOC-DEPLOY-004]\n\nIf you are unable to locate the override after checking the environment overrides page, please let us know, and we can escalate this to a specialist for further investigation.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-DEPLOY-004",
+          "DOC-SEC-002"
+        ],
+        "could_answer": false,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 2 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1847 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
+    },
+    {
+      "ticket_id": "DEV-0017",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-09T06:54:37.077906+00:00",
+      "ground_truth": {
+        "intent": "account_access",
+        "urgency": "low",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-ACCT-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "account_access",
+        "intent_confidence": 0.95,
+        "urgency": "medium",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket describes a specific issue where a team member's role assignment is not taking effect, preventing project access. This falls under 'account_access' as it involves permission changes and access visibility. The urgency is 'medium' because it blocks one developer but likely does not impact the entire service or business-critical operations immediately. It is 'answerable_from_docs' because the documentation covers 'team member roles and permissions,' including troubleshooting guides for permission propagation issues, which directly addresses the scenario where granted roles do not seem to take effect."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'account_access' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-ACCT-001",
+          "DOC-SEC-001",
+          "DOC-SEC-002"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-ACCT-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5794
+          },
+          {
+            "doc_id": "DOC-ACCT-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.5137
+          },
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.4502
+          },
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.4439
+          },
+          {
+            "doc_id": "DOC-SEC-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.4407
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hello,\n\nI understand how frustrating it is when a developer cannot access a project they should have, especially after you have already attempted to grant the role. I can help you troubleshoot why the access is not taking effect.\n\nBased on our documentation, there are a few common reasons why a user might not see a project despite having a role assigned:\n\n1.  **Check the Scope of the Role:** Ensure the role was granted at the correct scope. A common issue is granting the role at the project scope rather than the organisation scope, or vice versa, which can prevent the user from seeing the project in their list [DOC-ACCT-001].\n2.  **Verify Invitation Acceptance:** Confirm that the user has actually accepted the invitation. If the invitation was never accepted, the account may not be fully provisioned in the system, preventing access [DOC-ACCT-001].\n3.  **Review Group Memberships:** Check if the user is part of a group. Sometimes, a group membership can grant broader access that overrides or conflicts with the direct role you assigned, which might be causing confusion in the interface [DOC-ACCT-001].\n\nTo resolve this, please try the following steps:\n\n1.  Navigate to the **Team Members** page and verify the specific scope (Organisation vs. Project) of the role assigned to this developer.\n2.  Confirm that the developer has accepted the invitation email. If not, resend the invitation.\n3.  Check if the developer is a member of any groups that might be affecting their permissions.\n\nIf you have verified the scope and invitation status and the issue persists, please let us know. We may need to review the specific account configuration further.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-ACCT-001"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 1 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1788 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
+    },
+    {
+      "ticket_id": "DEV-0030",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-09T06:55:10.629337+00:00",
+      "ground_truth": {
+        "intent": "rollback_request",
+        "urgency": "high",
+        "expected_route": "escalate",
+        "answerable_from_docs": false,
+        "expected_doc_ids": [],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "rollback_request",
+        "intent_confidence": 0.98,
+        "urgency": "high",
+        "urgency_confidence": 0.95,
+        "answerable_from_docs": false,
+        "answerable_confidence": 0.6000000000000001,
+        "must_not_auto_respond": false,
+        "reasoning": "The customer explicitly requests to revert a bad production release that is breaking checkout, which maps directly to rollback_request. The urgency is high because a core business function (checkout) is broken in production. The answerable_from_docs is true because the documentation explicitly covers 'rolling back releases' under the Deployment section, providing the procedure for the fastest safe route. [OVERRIDE: Active breakage detected ('broken'). Rollback procedure exists in docs but this ticket describes a live incident needing human investigation.]"
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Ticket classified as not answerable from documentation (confidence: 0.60). Requires human investigation.",
+        "escalation_target": "tier1_support",
+        "rule_triggered": "not_answerable_from_docs"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-DEPLOY-002",
+          "DOC-API-003",
+          "DOC-DATA-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.5128
+          },
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4984
+          },
+          {
+            "doc_id": "DOC-API-003",
+            "section_name": "Notes",
+            "relevance_score": 0.4656
+          },
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Common causes",
+            "relevance_score": 0.4431
+          },
+          {
+            "doc_id": "DOC-DATA-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4176
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "escalated"
+    },
+    {
+      "ticket_id": "DEV-0032",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-09T06:55:36.771873+00:00",
+      "ground_truth": {
+        "intent": "database_issue",
+        "urgency": "high",
+        "expected_route": "escalate",
+        "answerable_from_docs": false,
+        "expected_doc_ids": [],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "database_issue",
+        "intent_confidence": 0.95,
+        "urgency": "high",
+        "urgency_confidence": 0.9,
+        "answerable_from_docs": false,
+        "answerable_confidence": 0.55,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket explicitly mentions 'Connection pool exhausted' and errors regarding unavailable connections, which maps directly to the 'database_issue' intent. The urgency is high because the service is failing to process requests due to resource exhaustion, impacting business operations. The documentation explicitly covers 'database connection pool exhaustion' under the Performance section, providing troubleshooting steps for this specific known problem type, making it answerable from docs. [OVERRIDE: Active database incident detected ('exhausted'). Needs human investigation of customer's specific environment.]"
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Ticket classified as not answerable from documentation (confidence: 0.55). Requires human investigation.",
+        "escalation_target": "tier1_support",
+        "rule_triggered": "not_answerable_from_docs"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-PERF-003",
+          "DOC-PERF-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-PERF-003",
+            "section_name": "Common causes",
+            "relevance_score": 0.6086
+          },
+          {
+            "doc_id": "DOC-PERF-003",
+            "section_name": "Symptoms",
+            "relevance_score": 0.6024
+          },
+          {
+            "doc_id": "DOC-PERF-003",
+            "section_name": "Resolution",
+            "relevance_score": 0.5222
+          },
+          {
+            "doc_id": "DOC-PERF-003",
+            "section_name": "Notes",
+            "relevance_score": 0.4973
+          },
+          {
+            "doc_id": "DOC-PERF-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.4663
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "escalated"
+    },
+    {
+      "ticket_id": "DEV-0035",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-09T06:55:49.867364+00:00",
+      "ground_truth": {
+        "intent": "security_incident",
+        "urgency": "high",
+        "expected_route": "escalate",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-SEC-001"
+        ],
+        "must_not_auto_respond": true
+      },
+      "predictions": {
+        "intent": "security_incident",
+        "intent_confidence": 0.95,
+        "urgency": "high",
+        "urgency_confidence": 0.9,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.95,
+        "must_not_auto_respond": true,
+        "reasoning": "The ticket describes a suspected credential exposure, which is a security incident. The urgency is high because potential credential compromise requires immediate action to prevent unauthorized access. The documentation explicitly covers 'exposed secrets and credential rotation' and 'suspected account compromise response,' making this answerable from docs."
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Intent 'security_incident' requires human review (must-not-auto-respond policy). Routing to security_team.",
+        "escalation_target": "security_team",
+        "rule_triggered": "must_not_auto_respond"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-SEC-001",
+          "DOC-SEC-002",
+          "DOC-INT-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.507
+          },
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.4803
+          },
+          {
+            "doc_id": "DOC-SEC-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.4789
+          },
+          {
+            "doc_id": "DOC-SEC-002",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4713
+          },
+          {
+            "doc_id": "DOC-INT-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.45
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "escalated"
+    },
+    {
+      "ticket_id": "DEV-0036",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-09T06:55:57.080897+00:00",
+      "ground_truth": {
+        "intent": "deployment_failure",
+        "urgency": "low",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-DEPLOY-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "deployment_failure",
+        "intent_confidence": 0.98,
+        "urgency": "high",
+        "urgency_confidence": 0.9,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.95,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket describes a specific deployment error where health checks are timing out. This matches the 'deployment_failure' intent. The urgency is high because every deployment is failing, which is a business-critical blocker. The documentation explicitly covers 'container health-check failures' under the Deployment section, making this answerable from docs as it is a known problem type with a troubleshooting guide."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'deployment_failure' with confidence 0.98 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-DEPLOY-001",
+          "DOC-INT-002"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-DEPLOY-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.7334
+          },
+          {
+            "doc_id": "DOC-DEPLOY-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.6049
+          },
+          {
+            "doc_id": "DOC-DEPLOY-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.5695
+          },
+          {
+            "doc_id": "DOC-DEPLOY-001",
+            "section_name": "Notes",
+            "relevance_score": 0.5487
+          },
+          {
+            "doc_id": "DOC-INT-002",
+            "section_name": "Notes",
+            "relevance_score": 0.4468
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hi there,\n\nI understand how frustrating it is to see deployments fail repeatedly, especially when adjusting the timeout hasn't resolved the issue. Since increasing the timeout did not help, the problem is likely not just a matter of the application taking too long to start, but rather a configuration mismatch or a dependency issue.\n\nBased on our documentation for Container Service deployments, here are the specific steps you should take to troubleshoot this:\n\n1.  **Verify the Port Configuration:** Confirm that your container is listening on the exact port declared in your service definition. A mismatch between the declared port and the actual listening port often produces a health check failure that appears as a timeout [DOC-DEPLOY-001].\n2.  **Check Environment Variables:** Compare the environment variables present in your deployment against those your application requires. Missing configuration can cause a silent startup failure, preventing the health endpoint from responding [DOC-DEPLOY-001].\n3.  **Inspect the Correct Logs:** When debugging, please inspect the container logs from the **failed revision** rather than the currently running one. Because the system rolls back on failure, the logs shown by default may be from the previous successful version, hiding the actual error [DOC-DEPLOY-001].\n4.  **Review Health Endpoint Dependencies:** Ensure your health check endpoint uses only local state. If your health check calls a database or external service, it will fail if that dependency is unavailable, causing the deployment to roll back [DOC-DEPLOY-001].\n5.  **Adjust Initial Delay (if applicable):** If your application requires time to warm up (e.g., loading models or caches), consider increasing the *initial delay* rather than just the timeout. Thirty seconds is a reasonable starting point for such services [DOC-DEPLOY-001].\n\nIf you have verified the port and environment variables and the issue persists, please let us know, and we can escalate this for further specialist review.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-DEPLOY-001"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 1 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (2139 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
+    },
+    {
+      "ticket_id": "DEV-0037",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199593, Requested 2220. Please try again in 13m3.216s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-09T06:57:28.823854+00:00",
+      "ground_truth": {
+        "intent": "integration_help",
+        "urgency": "medium",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-INT-001",
+          "DOC-INT-002"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0039",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199201, Requested 2124. Please try again in 9m32.4s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-09T07:00:20.062226+00:00",
+      "ground_truth": {
+        "intent": "configuration_help",
+        "urgency": "medium",
+        "expected_route": "escalate",
+        "answerable_from_docs": false,
+        "expected_doc_ids": [],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0040",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198807, Requested 2035. Please try again in 6m3.744s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-09T07:03:09.395953+00:00",
+      "ground_truth": {
+        "intent": "rollback_request",
+        "urgency": "medium",
+        "expected_route": "escalate",
+        "answerable_from_docs": false,
+        "expected_doc_ids": [],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0041",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198423, Requested 2331. Please try again in 5m25.728s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-09T07:05:59.756805+00:00",
+      "ground_truth": {
+        "intent": "deployment_failure",
+        "urgency": "high",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-DEPLOY-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0042",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198037, Requested 2288. Please try again in 2m20.4s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-09T07:08:45.582544+00:00",
+      "ground_truth": {
+        "intent": "rollback_request",
+        "urgency": "medium",
+        "expected_route": "escalate",
+        "answerable_from_docs": false,
+        "expected_doc_ids": [],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0043",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199263, Requested 1048. Please try again in 2m14.352s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-09T07:11:32.399990+00:00",
+      "ground_truth": {
+        "intent": "performance_degradation",
+        "urgency": "low",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-PERF-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "performance_degradation",
+        "intent_confidence": 0.98,
+        "urgency": "medium",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket describes gradual latency increase and high memory usage, which directly matches the 'response latency diagnosis' and 'performance' topics in the documentation. Although the customer hasn't identified the root cause, the documentation provides troubleshooting steps for this specific type of performance issue (latency/memory), making it answerable from docs. Urgency is medium because while performance is degrading, the service is not fully down and the issue is gradual rather than an immediate outage."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'performance_degradation' with confidence 0.98 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-PERF-001",
+          "DOC-API-001",
+          "DOC-PERF-003"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-PERF-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5192
+          },
+          {
+            "doc_id": "DOC-PERF-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.5145
+          },
+          {
+            "doc_id": "DOC-API-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5007
+          },
+          {
+            "doc_id": "DOC-PERF-003",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4936
+          },
+          {
+            "doc_id": "DOC-PERF-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.475
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0044",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198873, Requested 2043. Please try again in 6m35.712s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-09T07:17:04.604803+00:00",
+      "ground_truth": {
+        "intent": "quota_or_overage",
+        "urgency": "low",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-BILL-003"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0045",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198485, Requested 2324. Please try again in 5m49.488s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-09T07:19:53.026510+00:00",
+      "ground_truth": {
+        "intent": "authentication_failure",
+        "urgency": "medium",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-AUTH-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0046",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198096, Requested 1996. Please try again in 39.744s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-09T07:22:40.489511+00:00",
+      "ground_truth": {
+        "intent": "billing_query",
+        "urgency": "low",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-BILL-001",
+          "DOC-BILL-002"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0047",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-09T07:25:28.839747+00:00",
+      "ground_truth": {
+        "intent": "authentication_failure",
+        "urgency": "medium",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-AUTH-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {
+        "intent": "authentication_failure",
+        "intent_confidence": 0.95,
+        "urgency": "high",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": false,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The user is unable to log in to the console, which is a specific authentication failure. The fact that a colleague can log in successfully rules out a general outage, pointing to an account-specific issue (e.g., locked account, specific credential error, or MFA issue). While docs cover general login errors, the request to 'check whether something is wrong with my account specifically' implies a need for backend investigation of the user's specific state, which cannot be resolved by static documentation alone. The urgency is high because the user is completely blocked from accessing the service."
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Ticket classified as not answerable from documentation (confidence: 0.90). Requires human investigation.",
+        "escalation_target": "tier1_support",
+        "rule_triggered": "not_answerable_from_docs"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-AUTH-001",
+          "DOC-SEC-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-AUTH-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4898
+          },
+          {
+            "doc_id": "DOC-AUTH-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.4628
+          },
+          {
+            "doc_id": "DOC-AUTH-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.4522
+          },
+          {
+            "doc_id": "DOC-AUTH-001",
+            "section_name": "Notes",
+            "relevance_score": 0.4501
+          },
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.4377
+          }
+        ]
+      },
+      "generation": {},
+      "guardrails": {},
+      "final_action": "escalated"
+    },
+    {
+      "ticket_id": "DEV-0048",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199534, Requested 2337. Please try again in 13m28.272s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-09T07:26:56.586710+00:00",
+      "ground_truth": {
+        "intent": "quota_or_overage",
+        "urgency": "low",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-BILL-003",
+          "DOC-API-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0049",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199143, Requested 2326. Please try again in 10m34.608s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-09T07:29:46.052691+00:00",
+      "ground_truth": {
+        "intent": "integration_help",
+        "urgency": "low",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-INT-001"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    },
+    {
+      "ticket_id": "DEV-0050",
+      "status": "error",
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198753, Requested 2314. Please try again in 7m40.944s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "timestamp": "2026-09-09T07:32:34.881103+00:00",
+      "ground_truth": {
+        "intent": "billing_query",
+        "urgency": "high",
+        "expected_route": "auto_respond",
+        "answerable_from_docs": true,
+        "expected_doc_ids": [
+          "DOC-BILL-001",
+          "DOC-BILL-002"
+        ],
+        "must_not_auto_respond": false
+      },
+      "predictions": {},
+      "route": {},
+      "retrieval": {},
+      "generation": {},
+      "guardrails": {},
+      "final_action": "error"
+    }
+  ]
+}

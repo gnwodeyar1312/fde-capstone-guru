@@ -8,12 +8,13 @@ Three test classes:
 """
 
 import pytest
-from src.monitoring import compute_metrics
 
+from src.monitoring import compute_metrics
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def sample_results():
@@ -88,6 +89,7 @@ def sample_results():
 # Tests
 # ---------------------------------------------------------------------------
 
+
 class TestComputeMetrics:
     def test_run_info(self, sample_results):
         metrics = compute_metrics(sample_results)
@@ -148,16 +150,30 @@ class TestErrorBreakdown:
 
     def test_no_errors(self):
         data = {
-            "metadata": {"total_tickets": 1, "successful": 1, "errors": 0,
-                         "elapsed_seconds": 10, "tickets_per_minute": 6},
-            "results": [{
-                "ticket_id": "DEV-0001", "status": "success",
-                "ground_truth": {"intent": "billing_query", "expected_route": "auto_respond",
-                                 "answerable_from_docs": True},
-                "predictions": {"intent": "billing_query", "answerable_from_docs": True},
-                "route": {"action": "auto_respond"},
-                "guardrails": {"passed": True, "checks": []},
-            }],
+            "metadata": {
+                "total_tickets": 1,
+                "successful": 1,
+                "errors": 0,
+                "elapsed_seconds": 10,
+                "tickets_per_minute": 6,
+            },
+            "results": [
+                {
+                    "ticket_id": "DEV-0001",
+                    "status": "success",
+                    "ground_truth": {
+                        "intent": "billing_query",
+                        "expected_route": "auto_respond",
+                        "answerable_from_docs": True,
+                    },
+                    "predictions": {
+                        "intent": "billing_query",
+                        "answerable_from_docs": True,
+                    },
+                    "route": {"action": "auto_respond"},
+                    "guardrails": {"passed": True, "checks": []},
+                }
+            ],
         }
         metrics = compute_metrics(data)
         assert metrics["errors"]["total_errors"] == 0

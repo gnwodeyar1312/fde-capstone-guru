@@ -49,15 +49,13 @@ Interview context:
       specific situation while staying grounded in documentation.
 """
 
-import json
 import logging
-from typing import Optional
 
 from openai import OpenAI
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from src.config import GROQ_API_KEY, MODEL_NAME
 from src.classify import ClassificationResult, get_groq_client
+from src.config import MODEL_NAME
 from src.ingest import StandardTicket
 from src.retrieve import RetrievalResult
 
@@ -68,6 +66,7 @@ logger = logging.getLogger(__name__)
 # Pydantic model for generation output — the CONTRACT
 # ---------------------------------------------------------------------------
 
+
 class GeneratedResponse(BaseModel):
     """
     The output of the generate stage.
@@ -75,6 +74,7 @@ class GeneratedResponse(BaseModel):
     Contains the draft response, citations, and metadata about
     how the response was generated.
     """
+
     response_text: str
     cited_doc_ids: list[str] = []
     is_automated: bool = True
@@ -129,6 +129,7 @@ This is an automated response from CloudServe Support. If this doesn't resolve y
 # Helper: format retrieved chunks into a context block
 # ---------------------------------------------------------------------------
 
+
 def _format_context_block(retrieval: RetrievalResult) -> str:
     """
     Format retrieved chunks into a readable context block for the prompt.
@@ -142,7 +143,7 @@ def _format_context_block(retrieval: RetrievalResult) -> str:
     blocks = []
     for i, chunk in enumerate(retrieval.chunks):
         block = (
-            f"--- Document {i+1} ---\n"
+            f"--- Document {i + 1} ---\n"
             f"Doc ID: {chunk.doc_id}\n"
             f"Title: {chunk.title}\n"
             f"Section: {chunk.section_name}\n"
@@ -159,11 +160,12 @@ def _format_context_block(retrieval: RetrievalResult) -> str:
 # Core generation function
 # ---------------------------------------------------------------------------
 
+
 def generate_response(
     ticket: StandardTicket,
     classification: ClassificationResult,
     retrieval: RetrievalResult,
-    client: Optional[OpenAI] = None,
+    client: OpenAI | None = None,
 ) -> GeneratedResponse:
     """
     Generate a support response for a ticket using retrieved documentation.
@@ -203,7 +205,11 @@ def generate_response(
         context_block=context_block,
     )
 
-    logger.info("Generating response for ticket %s (intent=%s)", ticket.ticket_id, classification.intent)
+    logger.info(
+        "Generating response for ticket %s (intent=%s)",
+        ticket.ticket_id,
+        classification.intent,
+    )
 
     # Call the LLM
     response = client.chat.completions.create(
@@ -219,8 +225,8 @@ def generate_response(
             },
             {"role": "user", "content": prompt},
         ],
-        temperature=0.3,   # Low but not minimal — natural-sounding responses
-        max_tokens=1000,   # Support responses should be concise
+        temperature=0.3,  # Low but not minimal — natural-sounding responses
+        max_tokens=1000,  # Support responses should be concise
     )
 
     raw_response = response.choices[0].message.content.strip()
@@ -260,6 +266,7 @@ def generate_response(
 
 import re
 
+
 def _extract_citations(text: str) -> list[str]:
     """
     Extract doc_id citations from the response text.
@@ -267,7 +274,7 @@ def _extract_citations(text: str) -> list[str]:
     Looks for patterns like [DOC-AUTH-001], [DOC-DEPLOY-002], etc.
     Returns unique doc_ids in the order they first appear.
     """
-    pattern = r'\[(DOC-[A-Z]+-\d{3})\]'
+    pattern = r"\[(DOC-[A-Z]+-\d{3})\]"
     matches = re.findall(pattern, text)
     # Deduplicate while preserving order
     seen = set()

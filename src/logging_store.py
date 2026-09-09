@@ -45,19 +45,18 @@ Interview context:
 """
 
 import json
-import sqlite3
 import logging
+import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 from pydantic import BaseModel
 
-from src.config import DATABASE_URL
 from src.classify import ClassificationResult
-from src.route import RouteDecision
+from src.config import DATABASE_URL
 from src.generate import GeneratedResponse
 from src.guardrails import GuardrailResult
+from src.route import RouteDecision
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +65,7 @@ logger = logging.getLogger(__name__)
 # Decision record model
 # ---------------------------------------------------------------------------
 
+
 class DecisionRecord(BaseModel):
     """
     A complete record of all pipeline decisions for one ticket.
@@ -73,6 +73,7 @@ class DecisionRecord(BaseModel):
     This is what gets stored in the database. Every field traces back
     to a specific pipeline stage.
     """
+
     # Ticket identity
     ticket_id: str
     timestamp: str = ""
@@ -87,7 +88,7 @@ class DecisionRecord(BaseModel):
     # Routing stage
     route_action: str = ""  # "auto_respond" or "escalate"
     route_reason: str = ""
-    escalation_target: Optional[str] = None
+    escalation_target: str | None = None
     rule_triggered: str = ""
 
     # Retrieval stage
@@ -108,7 +109,7 @@ class DecisionRecord(BaseModel):
     # Final outcome
     final_action: str = ""  # "sent", "escalated", "blocked_by_guardrails"
 
-    def model_post_init(self, __context):
+    def model_post_init(self, __context, /):
         if not self.timestamp:
             self.timestamp = datetime.now(timezone.utc).isoformat()
 
@@ -117,6 +118,7 @@ class DecisionRecord(BaseModel):
 # Database initialization
 # ---------------------------------------------------------------------------
 
+
 def _get_db_path() -> str:
     """Extract the file path from the DATABASE_URL config."""
     # DATABASE_URL is like "sqlite:///./storage/decisions.db"
@@ -124,7 +126,7 @@ def _get_db_path() -> str:
     return path
 
 
-def init_database(db_path: Optional[str] = None) -> str:
+def init_database(db_path: str | None = None) -> str:
     """
     Initialize the SQLite database and create the decisions table.
 
@@ -201,7 +203,8 @@ def init_database(db_path: Optional[str] = None) -> str:
 # Core logging function
 # ---------------------------------------------------------------------------
 
-def log_decision(record: DecisionRecord, db_path: Optional[str] = None) -> int:
+
+def log_decision(record: DecisionRecord, db_path: str | None = None) -> int:
     """
     Write a decision record to the database.
 
@@ -256,7 +259,9 @@ def log_decision(record: DecisionRecord, db_path: Optional[str] = None) -> int:
         )
         conn.commit()
         row_id = cursor.lastrowid
-        logger.info("Logged decision for ticket %s (row_id=%d)", record.ticket_id, row_id)
+        logger.info(
+            "Logged decision for ticket %s (row_id=%d)", record.ticket_id, row_id
+        )
         return row_id
     finally:
         conn.close()
@@ -266,14 +271,15 @@ def log_decision(record: DecisionRecord, db_path: Optional[str] = None) -> int:
 # Builder: construct a DecisionRecord from pipeline stage outputs
 # ---------------------------------------------------------------------------
 
+
 def build_decision_record(
     ticket_id: str,
-    classification: Optional[ClassificationResult] = None,
-    route: Optional[RouteDecision] = None,
-    retrieval_doc_ids: Optional[list[str]] = None,
+    classification: ClassificationResult | None = None,
+    route: RouteDecision | None = None,
+    retrieval_doc_ids: list[str] | None = None,
     num_chunks: int = 0,
-    generation: Optional[GeneratedResponse] = None,
-    guardrails: Optional[GuardrailResult] = None,
+    generation: GeneratedResponse | None = None,
+    guardrails: GuardrailResult | None = None,
     final_action: str = "",
 ) -> DecisionRecord:
     """
@@ -324,7 +330,12 @@ def build_decision_record(
     if guardrails:
         record.guardrails_passed = guardrails.passed
         record.guardrail_checks = [
-            {"name": c.name, "passed": c.passed, "reason": c.reason, "severity": c.severity}
+            {
+                "name": c.name,
+                "passed": c.passed,
+                "reason": c.reason,
+                "severity": c.severity,
+            }
             for c in guardrails.checks
         ]
         record.guardrail_failed_checks = guardrails.failed_checks
@@ -338,7 +349,8 @@ def build_decision_record(
 # Query helpers
 # ---------------------------------------------------------------------------
 
-def get_decision(ticket_id: str, db_path: Optional[str] = None) -> Optional[dict]:
+
+def get_decision(ticket_id: str, db_path: str | None = None) -> dict | None:
     """
     Retrieve the most recent decision record for a ticket.
 
@@ -358,7 +370,12 @@ def get_decision(ticket_id: str, db_path: Optional[str] = None) -> Optional[dict
         if row:
             result = dict(row)
             # Deserialize JSON fields
-            for field in ["retrieved_doc_ids", "cited_doc_ids", "guardrail_checks", "guardrail_failed_checks"]:
+            for field in [
+                "retrieved_doc_ids",
+                "cited_doc_ids",
+                "guardrail_checks",
+                "guardrail_failed_checks",
+            ]:
                 if result.get(field):
                     result[field] = json.loads(result[field])
             return result
@@ -367,7 +384,7 @@ def get_decision(ticket_id: str, db_path: Optional[str] = None) -> Optional[dict
         conn.close()
 
 
-def get_all_decisions(db_path: Optional[str] = None) -> list[dict]:
+def get_all_decisions(db_path: str | None = None) -> list[dict]:
     """
     Retrieve all decision records.
 
@@ -384,7 +401,12 @@ def get_all_decisions(db_path: Optional[str] = None) -> list[dict]:
         results = []
         for row in rows:
             result = dict(row)
-            for field in ["retrieved_doc_ids", "cited_doc_ids", "guardrail_checks", "guardrail_failed_checks"]:
+            for field in [
+                "retrieved_doc_ids",
+                "cited_doc_ids",
+                "guardrail_checks",
+                "guardrail_failed_checks",
+            ]:
                 if result.get(field):
                     result[field] = json.loads(result[field])
             results.append(result)
@@ -393,7 +415,7 @@ def get_all_decisions(db_path: Optional[str] = None) -> list[dict]:
         conn.close()
 
 
-def get_summary_stats(db_path: Optional[str] = None) -> dict:
+def get_summary_stats(db_path: str | None = None) -> dict:
     """
     Get summary statistics from the decision log.
 

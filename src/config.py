@@ -1,6 +1,7 @@
 """Configuration module - loads environment variables safely."""
 
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()

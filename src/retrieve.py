@@ -51,7 +51,6 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Optional
 
 import chromadb
 from chromadb.utils import embedding_functions
@@ -66,8 +65,10 @@ logger = logging.getLogger(__name__)
 # Pydantic models for retrieval output — the CONTRACT
 # ---------------------------------------------------------------------------
 
+
 class RetrievedChunk(BaseModel):
     """A single chunk retrieved from the vector store."""
+
     doc_id: str
     title: str
     category: str
@@ -95,12 +96,13 @@ class RetrievedChunk(BaseModel):
 
 class RetrievalResult(BaseModel):
     """The output of the retrieve stage."""
+
     query: str
     chunks: list[RetrievedChunk]
     num_results: int = 0
     unique_doc_ids: list[str] = []
 
-    def model_post_init(self, __context):
+    def model_post_init(self, __context, /):
         self.num_results = len(self.chunks)
         self.unique_doc_ids = list(dict.fromkeys(c.doc_id for c in self.chunks))
 
@@ -108,6 +110,7 @@ class RetrievalResult(BaseModel):
 # ---------------------------------------------------------------------------
 # Document chunking — split docs into sections
 # ---------------------------------------------------------------------------
+
 
 def _chunk_document(doc: dict) -> list[dict]:
     """
@@ -136,7 +139,7 @@ def _chunk_document(doc: dict) -> list[dict]:
     applies_to = doc.get("applies_to", "")
 
     # Split on ## headers
-    sections = re.split(r'\n(?=## )', content)
+    sections = re.split(r"\n(?=## )", content)
 
     chunks = []
     for section in sections:
@@ -145,52 +148,57 @@ def _chunk_document(doc: dict) -> list[dict]:
             continue
 
         # Extract section name from ## header
-        header_match = re.match(r'^## (.+)', section)
+        header_match = re.match(r"^## (.+)", section)
         if header_match:
             section_name = header_match.group(1).strip()
             # Remove the header line from content
-            section_content = section[header_match.end():].strip()
+            section_content = section[header_match.end() :].strip()
         else:
             # This is the preamble (title + applies_to) — skip or use as "overview"
             # Skip lines that are just the title or "Applies to:" metadata
-            lines = section.split('\n')
+            lines = section.split("\n")
             meaningful_lines = [
-                line for line in lines
+                line
+                for line in lines
                 if line.strip()
-                and not line.startswith('# ')
-                and not line.startswith('**Applies to:')
+                and not line.startswith("# ")
+                and not line.startswith("**Applies to:")
             ]
             if not meaningful_lines:
                 continue
             section_name = "Overview"
-            section_content = '\n'.join(meaningful_lines).strip()
+            section_content = "\n".join(meaningful_lines).strip()
 
         if not section_content:
             continue
 
         chunk_id = f"{doc_id}_{section_name.lower().replace(' ', '_')}"
 
-        chunks.append({
-            "chunk_id": chunk_id,
-            "doc_id": doc_id,
-            "title": title,
-            "category": category,
-            "applies_to": applies_to,
-            "section_name": section_name,
-            "content": section_content,
-        })
+        chunks.append(
+            {
+                "chunk_id": chunk_id,
+                "doc_id": doc_id,
+                "title": title,
+                "category": category,
+                "applies_to": applies_to,
+                "section_name": section_name,
+                "content": section_content,
+            }
+        )
 
     # Fallback: if no sections were extracted, use the whole content
     if not chunks:
-        chunks.append({
-            "chunk_id": f"{doc_id}_full",
-            "doc_id": doc_id,
-            "title": title,
-            "category": category,
-            "applies_to": applies_to,
-            "section_name": "Full document",
-            "content": content,
-        })
+        chunks.append(
+            {
+                "chunk_id": f"{doc_id}_full",
+                "doc_id": doc_id,
+                "title": title,
+                "category": category,
+                "applies_to": applies_to,
+                "section_name": "Full document",
+                "content": content,
+            }
+        )
 
     return chunks
 
@@ -264,7 +272,7 @@ def build_vector_store(docs_path: str = "data/documentation.json") -> int:
     try:
         client.delete_collection(COLLECTION_NAME)
         logger.info("Deleted existing collection '%s'", COLLECTION_NAME)
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass  # Collection didn't exist — ValueError or NotFoundError depending on version
 
     # Create fresh collection
@@ -278,18 +286,23 @@ def build_vector_store(docs_path: str = "data/documentation.json") -> int:
     collection.add(
         ids=[c["chunk_id"] for c in all_chunks],
         documents=[c["content"] for c in all_chunks],
-        metadatas=[{
-            "doc_id": c["doc_id"],
-            "title": c["title"],
-            "category": c["category"],
-            "section_name": c["section_name"],
-            "applies_to": c["applies_to"],
-        } for c in all_chunks],
+        metadatas=[
+            {
+                "doc_id": c["doc_id"],
+                "title": c["title"],
+                "category": c["category"],
+                "section_name": c["section_name"],
+                "applies_to": c["applies_to"],
+            }
+            for c in all_chunks
+        ],
     )
 
     logger.info(
         "Stored %d chunks in ChromaDB collection '%s' at %s",
-        len(all_chunks), COLLECTION_NAME, CHROMA_PATH,
+        len(all_chunks),
+        COLLECTION_NAME,
+        CHROMA_PATH,
     )
 
     return len(all_chunks)
@@ -299,10 +312,11 @@ def build_vector_store(docs_path: str = "data/documentation.json") -> int:
 # Core retrieval function
 # ---------------------------------------------------------------------------
 
+
 def retrieve_context(
     query: str,
-    top_k: Optional[int] = None,
-    category_filter: Optional[str] = None,
+    top_k: int | None = None,
+    category_filter: str | None = None,
 ) -> RetrievalResult:
     """
     Retrieve the most relevant documentation chunks for a query.
@@ -358,15 +372,17 @@ def retrieve_context(
     if results and results["ids"] and results["ids"][0]:
         for i, chunk_id in enumerate(results["ids"][0]):
             meta = results["metadatas"][0][i]
-            chunks.append(RetrievedChunk(
-                doc_id=meta["doc_id"],
-                title=meta["title"],
-                category=meta["category"],
-                section_name=meta["section_name"],
-                content=results["documents"][0][i],
-                similarity_score=results["distances"][0][i],
-                applies_to=meta.get("applies_to", ""),
-            ))
+            chunks.append(
+                RetrievedChunk(
+                    doc_id=meta["doc_id"],
+                    title=meta["title"],
+                    category=meta["category"],
+                    section_name=meta["section_name"],
+                    content=results["documents"][0][i],
+                    similarity_score=results["distances"][0][i],
+                    applies_to=meta.get("applies_to", ""),
+                )
+            )
 
     result = RetrievalResult(query=query, chunks=chunks)
 
@@ -385,7 +401,8 @@ def retrieve_context(
 # Convenience: retrieve for a ticket
 # ---------------------------------------------------------------------------
 
-def retrieve_for_ticket(ticket, top_k: Optional[int] = None) -> RetrievalResult:
+
+def retrieve_for_ticket(ticket, top_k: int | None = None) -> RetrievalResult:
     """
     Retrieve relevant documentation for a StandardTicket.
 

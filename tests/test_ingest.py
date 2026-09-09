@@ -9,20 +9,19 @@ Testing strategy:
 """
 
 import json
+
 import pytest
-from pathlib import Path
+
 from src.ingest import (
     StandardTicket,
-    GroundTruthLabels,
-    IngestedTicket,
-    parse_ticket,
     ingest_tickets,
+    parse_ticket,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures — reusable test data
 # ---------------------------------------------------------------------------
+
 
 def make_raw_ticket(**overrides):
     """Factory for raw ticket dicts. Override any field you want to test."""
@@ -61,11 +60,15 @@ def make_raw_ticket(**overrides):
 # StandardTicket validation
 # ---------------------------------------------------------------------------
 
+
 class TestStandardTicket:
     def test_valid_email_ticket(self):
         t = StandardTicket(
-            ticket_id="T-1", channel="email", subject="Help",
-            body="Need help", received_at="2026-01-01T00:00:00Z",
+            ticket_id="T-1",
+            channel="email",
+            subject="Help",
+            body="Need help",
+            received_at="2026-01-01T00:00:00Z",
             customer_id="C-1",
         )
         assert t.channel == "email"
@@ -74,8 +77,11 @@ class TestStandardTicket:
     def test_valid_chat_ticket_empty_subject(self):
         """Chat tickets have empty subjects — this must be allowed."""
         t = StandardTicket(
-            ticket_id="T-2", channel="chat", subject="",
-            body="My build is failing", received_at="2026-01-01T00:00:00Z",
+            ticket_id="T-2",
+            channel="chat",
+            subject="",
+            body="My build is failing",
+            received_at="2026-01-01T00:00:00Z",
             customer_id="C-2",
         )
         assert t.subject == ""
@@ -84,29 +90,41 @@ class TestStandardTicket:
     def test_all_four_channels_accepted(self):
         for ch in ["email", "chat", "docs_comment", "forum"]:
             t = StandardTicket(
-                ticket_id="T-1", channel=ch, body="test",
-                received_at="2026-01-01T00:00:00Z", customer_id="C-1",
+                ticket_id="T-1",
+                channel=ch,
+                body="test",
+                received_at="2026-01-01T00:00:00Z",
+                customer_id="C-1",
             )
             assert t.channel == ch
 
     def test_invalid_channel_rejected(self):
         with pytest.raises(ValueError, match="Unknown channel"):
             StandardTicket(
-                ticket_id="T-1", channel="twitter", body="test",
-                received_at="2026-01-01T00:00:00Z", customer_id="C-1",
+                ticket_id="T-1",
+                channel="twitter",
+                body="test",
+                received_at="2026-01-01T00:00:00Z",
+                customer_id="C-1",
             )
 
     def test_empty_body_rejected(self):
         with pytest.raises(ValueError, match="cannot be empty"):
             StandardTicket(
-                ticket_id="T-1", channel="email", body="   ",
-                received_at="2026-01-01T00:00:00Z", customer_id="C-1",
+                ticket_id="T-1",
+                channel="email",
+                body="   ",
+                received_at="2026-01-01T00:00:00Z",
+                customer_id="C-1",
             )
 
     def test_combined_text_with_subject(self):
         t = StandardTicket(
-            ticket_id="T-1", channel="email", subject="SSO broken",
-            body="Cannot log in via SAML", received_at="2026-01-01T00:00:00Z",
+            ticket_id="T-1",
+            channel="email",
+            subject="SSO broken",
+            body="Cannot log in via SAML",
+            received_at="2026-01-01T00:00:00Z",
             customer_id="C-1",
         )
         combined = t.combined_text()
@@ -116,8 +134,11 @@ class TestStandardTicket:
 
     def test_combined_text_without_subject(self):
         t = StandardTicket(
-            ticket_id="T-1", channel="chat", subject="",
-            body="Build failing", received_at="2026-01-01T00:00:00Z",
+            ticket_id="T-1",
+            channel="chat",
+            subject="",
+            body="Build failing",
+            received_at="2026-01-01T00:00:00Z",
             customer_id="C-1",
         )
         assert t.combined_text() == "Build failing"
@@ -126,6 +147,7 @@ class TestStandardTicket:
 # ---------------------------------------------------------------------------
 # Ground truth separation — THE critical test
 # ---------------------------------------------------------------------------
+
 
 class TestGroundTruthSeparation:
     def test_labels_extracted_from_ticket(self):
@@ -162,6 +184,7 @@ class TestGroundTruthSeparation:
 # ---------------------------------------------------------------------------
 # File ingestion
 # ---------------------------------------------------------------------------
+
 
 class TestIngestTickets:
     def test_load_development_tickets(self):

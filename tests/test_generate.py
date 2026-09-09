@@ -6,28 +6,29 @@ We mock the Groq/OpenAI client to test prompt construction,
 citation extraction, and the could_answer detection logic.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+from src.classify import ClassificationResult
 from src.generate import (
-    generate_response,
+    GENERATION_PROMPT,
+    GeneratedResponse,
     _extract_citations,
     _format_context_block,
     _indicates_cannot_answer,
-    GeneratedResponse,
-    GENERATION_PROMPT,
+    generate_response,
 )
-from src.classify import ClassificationResult
 from src.ingest import StandardTicket
-from src.retrieve import RetrievedChunk, RetrievalResult
-
+from src.retrieve import RetrievalResult, RetrievedChunk
 
 # ---------------------------------------------------------------------------
 # Test data factories
 # ---------------------------------------------------------------------------
 
+
 def make_ticket(**overrides) -> StandardTicket:
-    defaults = dict(
+    defaults = dict(  # noqa: C408
         ticket_id="TICKET-001",
         subject="Cannot deploy my container",
         body="My deployment keeps failing with exit code 1 during health check.",
@@ -42,7 +43,7 @@ def make_ticket(**overrides) -> StandardTicket:
 
 
 def make_classification(**overrides) -> ClassificationResult:
-    defaults = dict(
+    defaults = dict(  # noqa: C408
         intent="deployment_failure",
         intent_confidence=0.92,
         urgency="medium",
@@ -58,15 +59,17 @@ def make_classification(**overrides) -> ClassificationResult:
 def make_retrieval_result(num_chunks=2) -> RetrievalResult:
     chunks = []
     for i in range(num_chunks):
-        chunks.append(RetrievedChunk(
-            doc_id=f"DOC-DEPLOY-{i+1:03d}",
-            title=f"Deployment Guide {i+1}",
-            category="deployment",
-            section_name="Resolution",
-            content=f"Step {i+1}: Check your Dockerfile health check configuration.",
-            similarity_score=0.3 + (i * 0.1),
-            applies_to="All plans",
-        ))
+        chunks.append(
+            RetrievedChunk(
+                doc_id=f"DOC-DEPLOY-{i + 1:03d}",
+                title=f"Deployment Guide {i + 1}",
+                category="deployment",
+                section_name="Resolution",
+                content=f"Step {i + 1}: Check your Dockerfile health check configuration.",
+                similarity_score=0.3 + (i * 0.1),
+                applies_to="All plans",
+            )
+        )
     return RetrievalResult(query="container deployment failing", chunks=chunks)
 
 
@@ -84,6 +87,7 @@ def make_mock_client(response_text: str) -> MagicMock:
 # ---------------------------------------------------------------------------
 # Citation extraction tests
 # ---------------------------------------------------------------------------
+
 
 class TestExtractCitations:
     """Tests for _extract_citations — regex-based doc_id extraction."""
@@ -127,6 +131,7 @@ class TestExtractCitations:
 # Cannot-answer detection tests
 # ---------------------------------------------------------------------------
 
+
 class TestIndicatesCannotAnswer:
     """Tests for _indicates_cannot_answer — graceful degradation detection."""
 
@@ -158,6 +163,7 @@ class TestIndicatesCannotAnswer:
 # ---------------------------------------------------------------------------
 # Context block formatting tests
 # ---------------------------------------------------------------------------
+
 
 class TestFormatContextBlock:
     """Tests for _format_context_block — turns chunks into prompt context."""
@@ -194,6 +200,7 @@ class TestFormatContextBlock:
 # GeneratedResponse model tests
 # ---------------------------------------------------------------------------
 
+
 class TestGeneratedResponseModel:
     """Tests for the GeneratedResponse Pydantic model."""
 
@@ -222,6 +229,7 @@ class TestGeneratedResponseModel:
 # ---------------------------------------------------------------------------
 # generate_response integration tests (mocked LLM)
 # ---------------------------------------------------------------------------
+
 
 class TestGenerateResponse:
     """Tests for generate_response with a mocked LLM client."""
@@ -330,7 +338,11 @@ class TestGenerateResponse:
         retrieval = make_retrieval_result()
 
         result = generate_response(ticket, classification, retrieval, client=client)
-        assert result.cited_doc_ids == ["DOC-AUTH-001", "DOC-DEPLOY-002", "DOC-PERF-003"]
+        assert result.cited_doc_ids == [
+            "DOC-AUTH-001",
+            "DOC-DEPLOY-002",
+            "DOC-PERF-003",
+        ]
 
     def test_reasoning_field_populated(self):
         """The reasoning field records chunk and citation counts."""
@@ -348,26 +360,35 @@ class TestGenerateResponse:
 # GENERATION_PROMPT template tests
 # ---------------------------------------------------------------------------
 
+
 class TestGenerationPrompt:
     """Tests for the prompt template itself."""
 
     def test_prompt_has_required_placeholders(self):
         """The prompt template contains all required format placeholders."""
-        required = ["{subject}", "{body}", "{channel}", "{customer_tier}",
-                    "{intent}", "{urgency}", "{context_block}"]
+        required = [
+            "{subject}",
+            "{body}",
+            "{channel}",
+            "{customer_tier}",
+            "{intent}",
+            "{urgency}",
+            "{context_block}",
+        ]
         for placeholder in required:
             assert placeholder in GENERATION_PROMPT, f"Missing {placeholder}"
 
     def test_prompt_instructs_grounded_generation(self):
         """The prompt tells the LLM to ONLY use provided documentation."""
         assert "ONLY" in GENERATION_PROMPT
-        assert "provided documentation" in GENERATION_PROMPT.lower() or \
-               "documentation provided" in GENERATION_PROMPT.lower()
+        assert (
+            "provided documentation" in GENERATION_PROMPT.lower()
+            or "documentation provided" in GENERATION_PROMPT.lower()
+        )
 
     def test_prompt_requires_citation_format(self):
         """The prompt specifies the [DOC-ID] citation format."""
-        assert "[doc_id]" in GENERATION_PROMPT.lower() or \
-               "[DOC-" in GENERATION_PROMPT
+        assert "[doc_id]" in GENERATION_PROMPT.lower() or "[DOC-" in GENERATION_PROMPT
 
     def test_prompt_flags_automated_response(self):
         """The prompt instructs adding the automated response footer."""

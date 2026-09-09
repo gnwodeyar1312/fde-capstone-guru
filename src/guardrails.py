@@ -52,11 +52,10 @@ Interview context:
       unformatted phone numbers.
 """
 
-import re
 import logging
-from typing import Optional
+import re
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from src.generate import GeneratedResponse
 from src.retrieve import RetrievalResult
@@ -68,8 +67,10 @@ logger = logging.getLogger(__name__)
 # Pydantic models for guardrail output — the CONTRACT
 # ---------------------------------------------------------------------------
 
+
 class GuardrailCheck(BaseModel):
     """Result of a single guardrail check."""
+
     name: str
     passed: bool
     reason: str
@@ -83,15 +84,20 @@ class GuardrailResult(BaseModel):
     Contains results of all checks and the final pass/fail decision.
     A response passes ONLY if ALL high-severity checks pass.
     """
+
     passed: bool = True
     checks: list[GuardrailCheck] = []
     failed_checks: list[str] = []
     warnings: list[str] = []
     recommendation: str = ""
 
-    def model_post_init(self, __context):
-        self.failed_checks = [c.name for c in self.checks if not c.passed and c.severity == "high"]
-        self.warnings = [c.name for c in self.checks if not c.passed and c.severity == "medium"]
+    def model_post_init(self, __context, /):
+        self.failed_checks = [
+            c.name for c in self.checks if not c.passed and c.severity == "high"
+        ]
+        self.warnings = [
+            c.name for c in self.checks if not c.passed and c.severity == "medium"
+        ]
         self.passed = len(self.failed_checks) == 0
         if not self.passed:
             self.recommendation = (
@@ -110,6 +116,7 @@ class GuardrailResult(BaseModel):
 # ---------------------------------------------------------------------------
 # Individual guardrail checks
 # ---------------------------------------------------------------------------
+
 
 def _check_citations(
     response: GeneratedResponse,
@@ -176,7 +183,7 @@ def _check_no_fabricated_urls(response: GeneratedResponse) -> GuardrailCheck:
     support@cloudserve.com which is fine).
     """
     # Match http/https URLs
-    url_pattern = r'https?://[^\s\)\]\"\'<>]+'
+    url_pattern = r"https?://[^\s\)\]\"\'<>]+"
     urls_found = re.findall(url_pattern, response.response_text)
 
     # Filter out mailto-style links (not URLs)
@@ -215,10 +222,10 @@ def _check_no_pii_leakage(response: GeneratedResponse) -> GuardrailCheck:
     safe (they just trigger a review), while false negatives are not.
     """
     pii_patterns = {
-        "email": r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}',
-        "phone": r'\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b',
-        "credit_card": r'\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b',
-        "ssn": r'\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b',
+        "email": r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",
+        "phone": r"\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b",
+        "credit_card": r"\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b",
+        "ssn": r"\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b",
     }
 
     # Allowlisted patterns (support emails that are fine to include)
@@ -326,6 +333,7 @@ def _check_automated_footer(response: GeneratedResponse) -> GuardrailCheck:
 # ---------------------------------------------------------------------------
 # Core guardrails function
 # ---------------------------------------------------------------------------
+
 
 def validate_response(
     response: GeneratedResponse,

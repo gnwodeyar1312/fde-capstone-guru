@@ -39,38 +39,38 @@ Interview context:
       error rate, and guardrail pass/fail breakdown.
 """
 
-import json
 import argparse
-import sys
-from datetime import datetime
-from typing import Optional
+import json
 from collections import defaultdict
-
+from datetime import datetime, timezone
 
 # ---------------------------------------------------------------------------
 # Metric computation
 # ---------------------------------------------------------------------------
 
+
 def compute_metrics(results_data: dict) -> dict:
     """
     Compute comprehensive metrics from an evaluation harness output file.
-    
+
     Args:
         results_data: Parsed JSON from the evaluation harness output
-        
+
     Returns:
         Dict with all computed metrics
     """
     metadata = results_data.get("metadata", {})
     results = results_data.get("results", [])
-    
+
     # Separate successful vs failed tickets
     successful = [r for r in results if r.get("status") == "success"]
     failed = [r for r in results if r.get("status") != "success"]
-    
+
     metrics = {
         "run_info": {
-            "timestamp": metadata.get("run_timestamp", datetime.now().isoformat()),
+            "timestamp": metadata.get(
+                "run_timestamp", datetime.now(timezone.utc).isoformat()
+            ),
             "input_file": metadata.get("input_file", "unknown"),
             "total_tickets": metadata.get("total_tickets", len(results)),
             "successful": len(successful),
@@ -86,7 +86,7 @@ def compute_metrics(results_data: dict) -> dict:
         "latency": _compute_latency_metrics(successful),
         "errors": _compute_error_breakdown(failed),
     }
-    
+
     return metrics
 
 
@@ -94,25 +94,25 @@ def _compute_accuracy(results: list) -> dict:
     """Overall accuracy metrics."""
     if not results:
         return {"intent": 0, "answerable": 0, "route": 0, "sample_size": 0}
-    
+
     intent_correct = 0
     answerable_correct = 0
     route_correct = 0
     intent_total = 0
     answerable_total = 0
     route_total = 0
-    
+
     for r in results:
         gt = r.get("ground_truth", {})
-        pred = r.get("predictions", {})
         route = r.get("route", {})
-        
+        pred = r.get("predictions", {})
+
         # Intent accuracy
         if gt.get("intent") and pred.get("intent"):
             intent_total += 1
             if gt["intent"] == pred["intent"]:
                 intent_correct += 1
-        
+
         # Answerable accuracy
         gt_ans = gt.get("answerable_from_docs")
         pred_ans = pred.get("answerable_from_docs")
@@ -120,7 +120,7 @@ def _compute_accuracy(results: list) -> dict:
             answerable_total += 1
             if gt_ans == pred_ans:
                 answerable_correct += 1
-        
+
         # Route accuracy
         gt_route = gt.get("expected_route") or gt.get("expected_action")
         pred_route = route.get("action")
@@ -128,7 +128,7 @@ def _compute_accuracy(results: list) -> dict:
             route_total += 1
             if gt_route == pred_route:
                 route_correct += 1
-    
+
     return {
         "intent": round(intent_correct / max(intent_total, 1) * 100, 1),
         "intent_correct": intent_correct,
@@ -145,46 +145,54 @@ def _compute_accuracy(results: list) -> dict:
 
 def _compute_per_intent(results: list) -> dict:
     """Per-intent accuracy breakdown."""
-    intent_stats = defaultdict(lambda: {
-        "total": 0, "correct": 0, "answerable_correct": 0,
-        "answerable_total": 0, "route_correct": 0, "route_total": 0
-    })
-    
+    intent_stats = defaultdict(
+        lambda: {
+            "total": 0,
+            "correct": 0,
+            "answerable_correct": 0,
+            "answerable_total": 0,
+            "route_correct": 0,
+            "route_total": 0,
+        }
+    )
+
     for r in results:
         gt = r.get("ground_truth", {})
-        pred = r.get("predictions", {})
         route = r.get("route", {})
+        pred = r.get("predictions", {})
         gt_intent = gt.get("intent")
-        
+
         if not gt_intent:
             continue
-            
+
         stats = intent_stats[gt_intent]
         stats["total"] += 1
-        
+
         if pred.get("intent") == gt_intent:
             stats["correct"] += 1
-        
+
         gt_ans = gt.get("answerable_from_docs")
         pred_ans = pred.get("answerable_from_docs")
         if gt_ans is not None and pred_ans is not None:
             stats["answerable_total"] += 1
             if gt_ans == pred_ans:
                 stats["answerable_correct"] += 1
-        
+
         gt_route = gt.get("expected_route") or gt.get("expected_action")
         pred_route = route.get("action")
         if gt_route and pred_route:
             stats["route_total"] += 1
             if gt_route == pred_route:
                 stats["route_correct"] += 1
-    
+
     # Convert to percentages
     per_intent = {}
     for intent, stats in sorted(intent_stats.items()):
         per_intent[intent] = {
             "count": stats["total"],
-            "intent_accuracy": round(stats["correct"] / max(stats["total"], 1) * 100, 1),
+            "intent_accuracy": round(
+                stats["correct"] / max(stats["total"], 1) * 100, 1
+            ),
             "answerable_accuracy": round(
                 stats["answerable_correct"] / max(stats["answerable_total"], 1) * 100, 1
             ),
@@ -192,7 +200,7 @@ def _compute_per_intent(results: list) -> dict:
                 stats["route_correct"] / max(stats["route_total"], 1) * 100, 1
             ),
         }
-    
+
     return per_intent
 
 
@@ -202,26 +210,30 @@ def _compute_routing_metrics(results: list) -> dict:
     escalate = 0
     must_not_auto_flags = 0
     must_not_auto_correct = 0
-    
-    MUST_NOT_AUTO = {"compliance_request", "security_incident", "feature_request", "unclear_request"}
-    
+
+    MUST_NOT_AUTO = {
+        "compliance_request",
+        "security_incident",
+        "feature_request",
+        "unclear_request",
+    }
+
     for r in results:
         route = r.get("route", {})
-        pred = r.get("predictions", {})
         action = route.get("action")
-        
+
         if action == "auto_respond":
             auto_respond += 1
         elif action == "escalate":
             escalate += 1
-        
+
         # Check must_not_auto_respond compliance
         gt_intent = r.get("ground_truth", {}).get("intent", "")
         if gt_intent in MUST_NOT_AUTO:
             must_not_auto_flags += 1
             if action == "escalate":
                 must_not_auto_correct += 1
-    
+
     total = auto_respond + escalate
     return {
         "auto_respond": auto_respond,
@@ -241,23 +253,23 @@ def _compute_guardrail_metrics(results: list) -> dict:
     total_checked = 0
     total_passed = 0
     check_stats = defaultdict(lambda: {"passed": 0, "failed": 0})
-    
+
     for r in results:
         gr = r.get("guardrails")
         if not gr:
             continue
-        
+
         total_checked += 1
         if gr.get("passed", False):
             total_passed += 1
-        
+
         for check in gr.get("checks", []):
             name = check.get("name", "unknown")
             if check.get("passed", False):
                 check_stats[name]["passed"] += 1
             else:
                 check_stats[name]["failed"] += 1
-    
+
     return {
         "total_checked": total_checked,
         "total_passed": total_passed,
@@ -272,14 +284,14 @@ def _compute_latency_metrics(results: list) -> dict:
     # but we can estimate from metadata
     return {
         "note": "Per-ticket latency requires timestamp fields in results. "
-                "Currently using aggregate metadata from the run."
+        "Currently using aggregate metadata from the run."
     }
 
 
 def _compute_error_breakdown(failed: list) -> dict:
     """Categorize errors from failed tickets."""
     error_types = defaultdict(int)
-    
+
     for r in failed:
         error = r.get("error", "unknown")
         if "rate_limit" in error.lower() or "429" in error:
@@ -292,7 +304,7 @@ def _compute_error_breakdown(failed: list) -> dict:
             error_types["connection_error"] += 1
         else:
             error_types["other"] += 1
-    
+
     return {
         "total_errors": len(failed),
         "by_type": dict(error_types),
@@ -303,49 +315,66 @@ def _compute_error_breakdown(failed: list) -> dict:
 # Display
 # ---------------------------------------------------------------------------
 
+
 def print_metrics(metrics: dict):
     """Pretty-print metrics to stdout."""
     ri = metrics["run_info"]
     acc = metrics["accuracy"]
     route = metrics["routing"]
     gr = metrics["guardrails"]
-    
+
     print("=" * 65)
     print("  CLOUDSERVE SUPPORT SYSTEM — MONITORING REPORT")
     print("=" * 65)
-    
+
     print(f"\n  Run: {ri['timestamp']}")
     print(f"  Input: {ri['input_file']}")
-    print(f"  Tickets: {ri['successful']}/{ri['total_tickets']} successful "
-          f"({ri['error_rate']}% error rate)")
-    print(f"  Duration: {ri['elapsed_seconds']:.1f}s "
-          f"({ri['tickets_per_minute']:.1f} tickets/min)")
-    
+    print(
+        f"  Tickets: {ri['successful']}/{ri['total_tickets']} successful "
+        f"({ri['error_rate']}% error rate)"
+    )
+    print(
+        f"  Duration: {ri['elapsed_seconds']:.1f}s "
+        f"({ri['tickets_per_minute']:.1f} tickets/min)"
+    )
+
     print(f"\n{'─' * 65}")
     print("  ACCURACY")
     print(f"{'─' * 65}")
-    print(f"  Intent:      {acc['intent']:>6.1f}%  ({acc['intent_correct']}/{acc['intent_total']})")
-    print(f"  Answerable:  {acc['answerable']:>6.1f}%  ({acc['answerable_correct']}/{acc['answerable_total']})")
-    print(f"  Route:       {acc['route']:>6.1f}%  ({acc['route_correct']}/{acc['route_total']})")
-    
+    print(
+        f"  Intent:      {acc['intent']:>6.1f}%  ({acc['intent_correct']}/{acc['intent_total']})"
+    )
+    print(
+        f"  Answerable:  {acc['answerable']:>6.1f}%  ({acc['answerable_correct']}/{acc['answerable_total']})"
+    )
+    print(
+        f"  Route:       {acc['route']:>6.1f}%  ({acc['route_correct']}/{acc['route_total']})"
+    )
+
     print(f"\n{'─' * 65}")
     print("  ROUTING")
     print(f"{'─' * 65}")
-    print(f"  Auto-respond:  {route['auto_respond']}  ({route['auto_respond_pct']:.1f}%)")
+    print(
+        f"  Auto-respond:  {route['auto_respond']}  ({route['auto_respond_pct']:.1f}%)"
+    )
     print(f"  Escalate:      {route['escalate']}  ({route['escalate_pct']:.1f}%)")
-    print(f"  Must-not-auto: {route['must_not_auto_correct']}/{route['must_not_auto_total']} "
-          f"({route['must_not_auto_compliance']:.1f}% compliance)")
-    
+    print(
+        f"  Must-not-auto: {route['must_not_auto_correct']}/{route['must_not_auto_total']} "
+        f"({route['must_not_auto_compliance']:.1f}% compliance)"
+    )
+
     print(f"\n{'─' * 65}")
     print("  GUARDRAILS")
     print(f"{'─' * 65}")
-    print(f"  Pass rate: {gr['total_passed']}/{gr['total_checked']} "
-          f"({gr['pass_rate']:.1f}%)")
+    print(
+        f"  Pass rate: {gr['total_passed']}/{gr['total_checked']} "
+        f"({gr['pass_rate']:.1f}%)"
+    )
     for name, stats in gr.get("per_check", {}).items():
         total = stats["passed"] + stats["failed"]
         pct = round(stats["passed"] / max(total, 1) * 100, 1)
         print(f"    {name}: {stats['passed']}/{total} ({pct}%)")
-    
+
     # Per-intent breakdown
     pi = metrics.get("per_intent", {})
     if pi:
@@ -353,13 +382,15 @@ def print_metrics(metrics: dict):
         print("  PER-INTENT BREAKDOWN")
         print(f"{'─' * 65}")
         print(f"  {'Intent':<28} {'Count':>5} {'Intent%':>8} {'Ans%':>8} {'Route%':>8}")
-        print(f"  {'─'*28} {'─'*5} {'─'*8} {'─'*8} {'─'*8}")
+        print(f"  {'─' * 28} {'─' * 5} {'─' * 8} {'─' * 8} {'─' * 8}")
         for intent, stats in pi.items():
-            print(f"  {intent:<28} {stats['count']:>5} "
-                  f"{stats['intent_accuracy']:>7.1f}% "
-                  f"{stats['answerable_accuracy']:>7.1f}% "
-                  f"{stats['route_accuracy']:>7.1f}%")
-    
+            print(
+                f"  {intent:<28} {stats['count']:>5} "
+                f"{stats['intent_accuracy']:>7.1f}% "
+                f"{stats['answerable_accuracy']:>7.1f}% "
+                f"{stats['route_accuracy']:>7.1f}%"
+            )
+
     # Error breakdown
     errors = metrics.get("errors", {})
     if errors.get("total_errors", 0) > 0:
@@ -368,7 +399,7 @@ def print_metrics(metrics: dict):
         print(f"{'─' * 65}")
         for etype, count in errors.get("by_type", {}).items():
             print(f"  {etype}: {count}")
-    
+
     print(f"\n{'=' * 65}")
 
 
@@ -376,30 +407,29 @@ def print_metrics(metrics: dict):
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Compute monitoring metrics from evaluation harness output"
     )
     parser.add_argument(
-        "--input", required=True,
-        help="Path to evaluation harness output JSON"
+        "--input", required=True, help="Path to evaluation harness output JSON"
     )
     parser.add_argument(
-        "--output", default=None,
-        help="Optional path to save metrics JSON report"
+        "--output", default=None, help="Optional path to save metrics JSON report"
     )
     args = parser.parse_args()
-    
+
     # Load results
     with open(args.input, "r") as f:
         results_data = json.load(f)
-    
+
     # Compute metrics
     metrics = compute_metrics(results_data)
-    
+
     # Print to stdout
     print_metrics(metrics)
-    
+
     # Save if requested
     if args.output:
         with open(args.output, "w") as f:

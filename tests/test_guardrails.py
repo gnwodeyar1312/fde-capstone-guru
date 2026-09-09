@@ -7,25 +7,27 @@ All deterministic — no LLM or API calls.
 
 import pytest
 
+from src.generate import GeneratedResponse
 from src.guardrails import (
-    validate_response,
+    GuardrailCheck,
+    GuardrailResult,
+    _check_automated_footer,
     _check_citations,
     _check_no_fabricated_urls,
     _check_no_pii_leakage,
     _check_response_length,
-    _check_automated_footer,
-    GuardrailResult,
-    GuardrailCheck,
+    validate_response,
 )
-from src.generate import GeneratedResponse
-from src.retrieve import RetrievedChunk, RetrievalResult
-
+from src.retrieve import RetrievalResult, RetrievedChunk
 
 # ---------------------------------------------------------------------------
 # Test data factories
 # ---------------------------------------------------------------------------
 
-def make_response(text: str = None, cited_ids: list[str] = None) -> GeneratedResponse:
+
+def make_response(
+    text: str | None = None, cited_ids: list[str] | None = None
+) -> GeneratedResponse:
     if text is None:
         text = (
             "Hello,\n\n"
@@ -42,7 +44,7 @@ def make_response(text: str = None, cited_ids: list[str] = None) -> GeneratedRes
     )
 
 
-def make_retrieval(doc_ids: list[str] = None) -> RetrievalResult:
+def make_retrieval(doc_ids: list[str] | None = None) -> RetrievalResult:
     if doc_ids is None:
         doc_ids = ["DOC-DEPLOY-001"]
     chunks = [
@@ -62,6 +64,7 @@ def make_retrieval(doc_ids: list[str] = None) -> RetrievalResult:
 # ---------------------------------------------------------------------------
 # Citation validation tests
 # ---------------------------------------------------------------------------
+
 
 class TestCitationValidation:
     """Guardrail 1: Citation validation."""
@@ -95,7 +98,9 @@ class TestCitationValidation:
 
     def test_multiple_valid_citations_pass(self):
         response = make_response(cited_ids=["DOC-DEPLOY-001", "DOC-AUTH-002"])
-        retrieval = make_retrieval(doc_ids=["DOC-DEPLOY-001", "DOC-AUTH-002", "DOC-PERF-003"])
+        retrieval = make_retrieval(
+            doc_ids=["DOC-DEPLOY-001", "DOC-AUTH-002", "DOC-PERF-003"]
+        )
         result = _check_citations(response, retrieval)
         assert result.passed
 
@@ -103,6 +108,7 @@ class TestCitationValidation:
 # ---------------------------------------------------------------------------
 # URL check tests
 # ---------------------------------------------------------------------------
+
 
 class TestNoFabricatedUrls:
     """Guardrail 2: No fabricated URLs."""
@@ -131,6 +137,7 @@ class TestNoFabricatedUrls:
 # PII leakage tests
 # ---------------------------------------------------------------------------
 
+
 class TestNoPiiLeakage:
     """Guardrail 3: No PII leakage."""
 
@@ -140,7 +147,9 @@ class TestNoPiiLeakage:
         assert result.passed
 
     def test_email_detected(self):
-        response = make_response(text="We see your account john@example.com has issues.")
+        response = make_response(
+            text="We see your account john@example.com has issues."
+        )
         result = _check_no_pii_leakage(response)
         assert not result.passed
         assert result.severity == "high"
@@ -171,6 +180,7 @@ class TestNoPiiLeakage:
 # ---------------------------------------------------------------------------
 # Response length tests
 # ---------------------------------------------------------------------------
+
 
 class TestResponseLength:
     """Guardrail 4: Response length bounds."""
@@ -207,6 +217,7 @@ class TestResponseLength:
 # Automated footer tests
 # ---------------------------------------------------------------------------
 
+
 class TestAutomatedFooter:
     """Guardrail 5: Automated response footer."""
 
@@ -232,6 +243,7 @@ class TestAutomatedFooter:
 # ---------------------------------------------------------------------------
 # Combined validation tests
 # ---------------------------------------------------------------------------
+
 
 class TestValidateResponse:
     """Tests for the combined validate_response function."""
@@ -294,6 +306,7 @@ class TestValidateResponse:
 # GuardrailResult model tests
 # ---------------------------------------------------------------------------
 
+
 class TestGuardrailResultModel:
     """Tests for the GuardrailResult Pydantic model."""
 
@@ -320,7 +333,9 @@ class TestGuardrailResultModel:
 
     def test_medium_severity_failure_warns(self):
         checks = [
-            GuardrailCheck(name="check1", passed=False, reason="meh", severity="medium"),
+            GuardrailCheck(
+                name="check1", passed=False, reason="meh", severity="medium"
+            ),
         ]
         result = GuardrailResult(checks=checks)
         assert result.passed  # medium doesn't block
