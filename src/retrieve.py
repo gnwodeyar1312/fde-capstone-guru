@@ -13,11 +13,14 @@ Design decisions:
        best under 256 tokens. Splitting by section (Symptoms, Common causes,
        Resolution, Notes) gives ~50-80 word chunks that are well within the
        sweet spot AND more precise for matching.
-    2. We use ChromaDB as the vector store.
-       Why? It's embedded (no server to run), persistent (survives restarts),
-       and has a simple API. For 29 docs with ~4 sections each (~116 chunks),
-       it's the right tool. We don't need Pinecone or Weaviate at this scale.
-    3. The embedding model (all-MiniLM-L6-v2) runs locally via sentence-transformers.
+    2. We use LangChain's Chroma wrapper as the vector store.
+       Why? LangChain provides a consistent interface for vector stores,
+       making it easy to swap backends (Chroma, FAISS, Pinecone) without
+       changing retrieval logic. Chroma itself is embedded (no server to
+       run), persistent (survives restarts), and has a simple API.
+       For 29 docs with ~4 sections each (~116 chunks), it's the right tool.
+    3. The embedding model (all-MiniLM-L6-v2) runs locally via
+       LangChain's HuggingFaceEmbeddings (backed by sentence-transformers).
        Why not an API-based embedding? Free, fast, no rate limits, no API key
        needed. The model is 80MB — tiny. And it runs offline, which matters
        for the unattended evaluation run (THE GATE).
@@ -52,8 +55,9 @@ import logging
 import re
 from pathlib import Path
 
-import chromadb
-from chromadb.utils import embedding_functions
+from langchain_community.vectorstores import Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_core.documents import Document
 from pydantic import BaseModel, Field
 
 from src.config import CHROMA_PATH, EMBEDDING_MODEL, RETRIEVAL_TOP_K
@@ -204,34 +208,44 @@ def _chunk_document(doc: dict) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Vector store management
+# LangChain embedding and vector store management
 # ---------------------------------------------------------------------------
 
 COLLECTION_NAME = "cloudserve_docs"
 
 
-def _get_chroma_client() -> chromadb.ClientAPI:
-    """Create a persistent ChromaDB client."""
-    persist_dir = str(Path(CHROMA_PATH).resolve())
-    Path(persist_dir).mkdir(parents=True, exist_ok=True)
-    return chromadb.PersistentClient(path=persist_dir)
-
-
-def _get_embedding_function():
+def _get_embeddings():
     """
-    Get the sentence-transformer embedding function for ChromaDB.
+    Get the LangChain HuggingFace embedding function.
 
     Uses all-MiniLM-L6-v2 by default (configurable via EMBEDDING_MODEL).
     This runs LOCALLY — no API call, no rate limit, no cost.
     """
-    return embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name=EMBEDDING_MODEL
+    return HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+
+
+def _get_vector_store(embeddings=None):
+    """
+    Get or create the LangChain Chroma vector store.
+
+    Returns a Chroma instance backed by persistent storage.
+    """
+    if embeddings is None:
+        embeddings = _get_embeddings()
+
+    persist_dir = str(Path(CHROMA_PATH).resolve())
+    Path(persist_dir).mkdir(parents=True, exist_ok=True)
+
+    return Chroma(
+        collection_name=COLLECTION_NAME,
+        embedding_function=embeddings,
+        persist_directory=persist_dir,
     )
 
 
 def build_vector_store(docs_path: str = "data/documentation.json") -> int:
     """
-    Load documentation, chunk it, embed it, and store in ChromaDB.
+    Load documentation, chunk it, embed it, and store in ChromaDB via LangChain.
 
     This is the B-03 build step. It is IDEMPOTENT — safe to run
     multiple times. Each run rebuilds the collection from scratch.
@@ -264,42 +278,50 @@ def build_vector_store(docs_path: str = "data/documentation.json") -> int:
 
     logger.info("Created %d chunks from %d documents", len(all_chunks), len(docs))
 
-    # Initialize ChromaDB
-    client = _get_chroma_client()
-    ef = _get_embedding_function()
+    # Initialize LangChain embeddings
+    embeddings = _get_embeddings()
 
     # Delete existing collection if it exists (idempotent rebuild)
+    persist_dir = str(Path(CHROMA_PATH).resolve())
+    Path(persist_dir).mkdir(parents=True, exist_ok=True)
+
     try:
+        import chromadb
+        client = chromadb.PersistentClient(path=persist_dir)
         client.delete_collection(COLLECTION_NAME)
         logger.info("Deleted existing collection '%s'", COLLECTION_NAME)
     except Exception:  # noqa: BLE001, S110
-        pass  # Collection didn't exist — ValueError or NotFoundError depending on version
+        pass  # Collection didn't exist
 
-    # Create fresh collection
-    collection = client.create_collection(
-        name=COLLECTION_NAME,
-        embedding_function=ef,
-        metadata={"hnsw:space": "l2"},  # L2 distance (Euclidean)
-    )
+    # Create LangChain Document objects with metadata
+    lc_documents = []
+    lc_ids = []
+    for c in all_chunks:
+        lc_documents.append(
+            Document(
+                page_content=c["content"],
+                metadata={
+                    "doc_id": c["doc_id"],
+                    "title": c["title"],
+                    "category": c["category"],
+                    "section_name": c["section_name"],
+                    "applies_to": c["applies_to"],
+                },
+            )
+        )
+        lc_ids.append(c["chunk_id"])
 
-    # Add chunks to collection
-    collection.add(
-        ids=[c["chunk_id"] for c in all_chunks],
-        documents=[c["content"] for c in all_chunks],
-        metadatas=[
-            {
-                "doc_id": c["doc_id"],
-                "title": c["title"],
-                "category": c["category"],
-                "section_name": c["section_name"],
-                "applies_to": c["applies_to"],
-            }
-            for c in all_chunks
-        ],
+    # Build the vector store via LangChain Chroma wrapper
+    vector_store = Chroma.from_documents(
+        documents=lc_documents,
+        embedding=embeddings,
+        collection_name=COLLECTION_NAME,
+        persist_directory=persist_dir,
+        ids=lc_ids,
     )
 
     logger.info(
-        "Stored %d chunks in ChromaDB collection '%s' at %s",
+        "Stored %d chunks in ChromaDB collection '%s' at %s (via LangChain)",
         len(all_chunks),
         COLLECTION_NAME,
         CHROMA_PATH,
@@ -323,7 +345,7 @@ def retrieve_context(
 
     This is the core function called by the pipeline. It:
     1. Embeds the query using the same model as the documents
-    2. Finds the top-k nearest chunks in ChromaDB
+    2. Finds the top-k nearest chunks via LangChain's Chroma interface
     3. Returns them as validated RetrievedChunk objects with metadata
 
     Args:
@@ -340,49 +362,44 @@ def retrieve_context(
     if top_k is None:
         top_k = RETRIEVAL_TOP_K
 
-    client = _get_chroma_client()
-    ef = _get_embedding_function()
+    vector_store = _get_vector_store()
 
-    try:
-        collection = client.get_collection(
-            name=COLLECTION_NAME,
-            embedding_function=ef,
-        )
-    except ValueError:
-        raise ValueError(
-            f"Collection '{COLLECTION_NAME}' not found. "
-            "Run build_vector_store() first to index the documentation."
-        )
-
-    # Build query parameters
-    query_params = {
-        "query_texts": [query],
-        "n_results": top_k,
-    }
-
-    # Optional category filter
+    # Build filter dict for LangChain Chroma
+    filter_dict = None
     if category_filter:
-        query_params["where"] = {"category": category_filter}
+        filter_dict = {"category": category_filter}
 
-    # Query the collection
-    results = collection.query(**query_params)
+    # Use similarity_search_with_score which returns (Document, score) tuples
+    # Score is L2 distance for Chroma (lower = more similar)
+    try:
+        results_with_scores = vector_store.similarity_search_with_score(
+            query=query,
+            k=top_k,
+            filter=filter_dict,
+        )
+    except Exception as e:
+        if "does not exist" in str(e).lower() or "not found" in str(e).lower():
+            raise ValueError(
+                f"Collection '{COLLECTION_NAME}' not found. "
+                "Run build_vector_store() first to index the documentation."
+            ) from e
+        raise
 
     # Parse results into RetrievedChunk objects
     chunks = []
-    if results and results["ids"] and results["ids"][0]:
-        for i, chunk_id in enumerate(results["ids"][0]):
-            meta = results["metadatas"][0][i]
-            chunks.append(
-                RetrievedChunk(
-                    doc_id=meta["doc_id"],
-                    title=meta["title"],
-                    category=meta["category"],
-                    section_name=meta["section_name"],
-                    content=results["documents"][0][i],
-                    similarity_score=results["distances"][0][i],
-                    applies_to=meta.get("applies_to", ""),
-                )
+    for doc, score in results_with_scores:
+        meta = doc.metadata
+        chunks.append(
+            RetrievedChunk(
+                doc_id=meta.get("doc_id", ""),
+                title=meta.get("title", ""),
+                category=meta.get("category", ""),
+                section_name=meta.get("section_name", ""),
+                content=doc.page_content,
+                similarity_score=score,
+                applies_to=meta.get("applies_to", ""),
             )
+        )
 
     result = RetrievalResult(query=query, chunks=chunks)
 

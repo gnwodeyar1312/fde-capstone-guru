@@ -4,7 +4,7 @@ Tests for the classify module.
 Three test classes:
 1. TestClassificationResult — Pydantic validation of the output model
 2. TestExtractJson — JSON extraction from messy LLM responses
-3. TestClassifyTicket — End-to-end classification (requires Groq API key)
+3. TestClassifyTicket — End-to-end classification with mocked LangChain LLM
 """
 
 import json
@@ -249,23 +249,20 @@ class TestExtractJson:
 
 
 class TestClassifyTicket:
-    """Test the full classify_ticket function with mocked LLM."""
+    """Test the full classify_ticket function with mocked LangChain LLM."""
 
-    def _mock_client(self, response_json: dict) -> MagicMock:
-        """Create a mock OpenAI client that returns the given JSON."""
-        mock_message = MagicMock()
-        mock_message.content = json.dumps(response_json)
+    def _mock_llm(self, response_json: dict) -> MagicMock:
+        """Create a mock LangChain ChatOpenAI that returns the given JSON.
 
-        mock_choice = MagicMock()
-        mock_choice.message = mock_message
-
+        LangChain's invoke() returns an AIMessage with a .content attribute.
+        """
         mock_response = MagicMock()
-        mock_response.choices = [mock_choice]
+        mock_response.content = json.dumps(response_json)
 
-        mock_client = MagicMock()
-        mock_client.chat.completions.create.return_value = mock_response
+        mock_llm = MagicMock()
+        mock_llm.invoke.return_value = mock_response
 
-        return mock_client
+        return mock_llm
 
     def test_classify_deployment_ticket(self, sample_ticket):
         """A deployment failure ticket should be classified correctly."""
@@ -278,9 +275,9 @@ class TestClassifyTicket:
             "answerable_confidence": 0.78,
             "reasoning": "Customer reports 503 error during deployment",
         }
-        client = self._mock_client(mock_response)
+        llm = self._mock_llm(mock_response)
 
-        result = classify_ticket(sample_ticket, client=client)
+        result = classify_ticket(sample_ticket, llm=llm)
 
         assert result.intent == "deployment_failure"
         assert result.urgency == "high"
@@ -299,9 +296,9 @@ class TestClassifyTicket:
             "answerable_confidence": 0.90,
             "reasoning": "Reports unauthorized access and potential key compromise",
         }
-        client = self._mock_client(mock_response)
+        llm = self._mock_llm(mock_response)
 
-        result = classify_ticket(security_ticket, client=client)
+        result = classify_ticket(security_ticket, llm=llm)
 
         assert result.intent == "security_incident"
         assert result.must_not_auto_respond is True
@@ -309,20 +306,14 @@ class TestClassifyTicket:
 
     def test_classify_handles_llm_failure_gracefully(self, sample_ticket):
         """If the LLM returns garbage, classify_ticket should raise."""
-        mock_message = MagicMock()
-        mock_message.content = "I don't understand the question"
-
-        mock_choice = MagicMock()
-        mock_choice.message = mock_message
-
         mock_response = MagicMock()
-        mock_response.choices = [mock_choice]
+        mock_response.content = "I don't understand the question"
 
-        mock_client = MagicMock()
-        mock_client.chat.completions.create.return_value = mock_response
+        mock_llm = MagicMock()
+        mock_llm.invoke.return_value = mock_response
 
         with pytest.raises(ValueError, match="Could not extract valid JSON"):
-            classify_ticket(sample_ticket, client=mock_client)
+            classify_ticket(sample_ticket, llm=mock_llm)
 
     def test_classify_strips_code_fences(self, sample_ticket):
         """LLM response wrapped in code fences should still work."""
@@ -336,17 +327,11 @@ class TestClassifyTicket:
             "reasoning": "Deployment issue",
         }
         # Simulate LLM wrapping response in code fences
-        mock_message = MagicMock()
-        mock_message.content = f"```json\n{json.dumps(response_json)}\n```"
-
-        mock_choice = MagicMock()
-        mock_choice.message = mock_message
-
         mock_response = MagicMock()
-        mock_response.choices = [mock_choice]
+        mock_response.content = f"```json\n{json.dumps(response_json)}\n```"
 
-        mock_client = MagicMock()
-        mock_client.chat.completions.create.return_value = mock_response
+        mock_llm = MagicMock()
+        mock_llm.invoke.return_value = mock_response
 
-        result = classify_ticket(sample_ticket, client=mock_client)
+        result = classify_ticket(sample_ticket, llm=mock_llm)
         assert result.intent == "deployment_failure"

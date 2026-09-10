@@ -30,6 +30,9 @@ Design decisions:
        Why? Classification needs determinism (0.1). Generation needs a
        bit more creativity to write natural-sounding responses, but not
        so much that it starts inventing information.
+    6. We use LangChain's ChatOpenAI for LLM generation.
+       Why? Consistent interface across providers (OpenRouter, Groq, etc.)
+       and integrates with the LangGraph pipeline orchestration.
 
 Interview context:
     "What happens if the retrieved docs don't answer the question?"
@@ -50,12 +53,14 @@ Interview context:
 """
 
 import logging
+import re
 
-from openai import OpenAI
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import SystemMessage, HumanMessage
 from pydantic import BaseModel
 
-from src.classify import ClassificationResult, get_groq_client
-from src.config import MODEL_NAME
+from src.classify import ClassificationResult
+from src.config import MODEL_NAME, get_llm
 from src.ingest import StandardTicket
 from src.retrieve import RetrievalResult
 
@@ -165,14 +170,14 @@ def generate_response(
     ticket: StandardTicket,
     classification: ClassificationResult,
     retrieval: RetrievalResult,
-    client: OpenAI | None = None,
+    llm: ChatOpenAI | None = None,
 ) -> GeneratedResponse:
     """
     Generate a support response for a ticket using retrieved documentation.
 
     This function:
     1. Builds the generation prompt with ticket, classification, and context
-    2. Sends it to the LLM via Groq's API
+    2. Sends it to the LLM via LangChain's ChatOpenAI interface
     3. Extracts cited doc_ids from the response
     4. Returns the validated GeneratedResponse
 
@@ -180,7 +185,7 @@ def generate_response(
         ticket: The StandardTicket from ingest
         classification: The ClassificationResult from classify
         retrieval: The RetrievalResult from retrieve
-        client: Optional pre-configured OpenAI client
+        llm: Optional pre-configured ChatOpenAI instance
 
     Returns:
         GeneratedResponse with the draft text and metadata
@@ -188,8 +193,8 @@ def generate_response(
     Raises:
         Exception: If the API call fails
     """
-    if client is None:
-        client = get_groq_client()
+    if llm is None:
+        llm = get_llm()
 
     # Build the context block from retrieved chunks
     context_block = _format_context_block(retrieval)
@@ -211,25 +216,22 @@ def generate_response(
         classification.intent,
     )
 
-    # Call the LLM
-    response = client.chat.completions.create(
-        model=MODEL_NAME,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are a professional CloudServe support agent. "
-                    "Write clear, helpful responses grounded in the provided documentation. "
-                    "Always cite sources with [DOC-ID] format."
-                ),
-            },
-            {"role": "user", "content": prompt},
-        ],
-        temperature=0.3,  # Low but not minimal — natural-sounding responses
-        max_tokens=1000,  # Support responses should be concise
-    )
+    # Call the LLM via LangChain
+    messages = [
+        SystemMessage(
+            content=(
+                "You are a professional CloudServe support agent. "
+                "Write clear, helpful responses grounded in the provided documentation. "
+                "Always cite sources with [DOC-ID] format."
+            ),
+        ),
+        HumanMessage(content=prompt),
+    ]
 
-    raw_response = response.choices[0].message.content.strip()
+    # Override temperature for generation (slightly more creative than classification)
+    response = llm.invoke(messages, temperature=0.3, max_tokens=1000)
+
+    raw_response = response.content.strip()
     logger.debug("Raw generation for %s: %s", ticket.ticket_id, raw_response[:200])
 
     # Extract cited doc_ids from the response text
@@ -263,8 +265,6 @@ def generate_response(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-import re
 
 
 def _extract_citations(text: str) -> list[str]:

@@ -11,10 +11,12 @@ Purpose:
     4. Confidence — how sure is the model about each prediction?
 
 Design decisions:
-    1. We use the Groq LLM (via OpenAI-compatible API) for classification.
+    1. We use LangChain's ChatOpenAI for LLM classification.
        Why LLM instead of a traditional ML classifier (e.g., sklearn)?
        → 22 intent categories with only ~23 samples each is too few for supervised ML.
          An LLM can generalize from the category names and descriptions alone (zero-shot).
+       Why LangChain? → Provides a consistent interface across providers (OpenRouter,
+         Groq, etc.) and integrates with the LangGraph pipeline orchestration.
     2. We ask the LLM to return structured JSON, then validate with Pydantic.
        Why? Same principle as ingest: fail fast at the boundary. If the LLM returns
        garbage JSON or an unknown intent, we catch it immediately.
@@ -38,11 +40,13 @@ Interview context:
 import json
 import logging
 import re
+from typing import Optional
 
-from openai import OpenAI
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import SystemMessage, HumanMessage
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from src.config import GROQ_API_KEY, MODEL_NAME
+from src.config import CONFIDENCE_THRESHOLD, get_llm
 from src.ingest import StandardTicket
 
 logger = logging.getLogger(__name__)
@@ -97,7 +101,6 @@ VALID_URGENCIES = {"low", "medium", "high"}
 # Pydantic model for classification output — the CONTRACT
 # ---------------------------------------------------------------------------
 
-
 class ClassificationResult(BaseModel):
     """
     The output of the classify stage.
@@ -106,7 +109,6 @@ class ClassificationResult(BaseModel):
     this model raises immediately rather than letting bad data flow
     into the retriever or router.
     """
-
     intent: str
     intent_confidence: float = Field(ge=0.0, le=1.0)
     urgency: str
@@ -267,34 +269,8 @@ Respond with ONLY valid JSON in this exact format:
 
 
 # ---------------------------------------------------------------------------
-# Groq client initialization
-# ---------------------------------------------------------------------------
-
-
-def get_groq_client() -> OpenAI:
-    """
-    Create an OpenAI-compatible client pointing to Groq's API.
-
-    Why OpenAI client for Groq?
-    → Groq's API is OpenAI-compatible. Using the OpenAI SDK means we can
-      swap providers (OpenAI, Groq, Together, Ollama) by changing the
-      base_url alone. This is a good engineering practice — don't couple
-      your code to one vendor's SDK.
-    """
-    if not GROQ_API_KEY:
-        raise ValueError("GROQ_API_KEY is not set. Check your .env file.")
-
-    return OpenAI(
-        api_key=GROQ_API_KEY,
-        base_url="https://api.groq.com/openai/v1",
-        max_retries=0,  # Disable built-in retry; our _call_with_retry handles backoff
-    )
-
-
-# ---------------------------------------------------------------------------
 # Helper: format retrieval context for the classification prompt
 # ---------------------------------------------------------------------------
-
 
 def _format_retrieval_context(retrieval_result) -> str:
     """
@@ -317,7 +293,7 @@ def _format_retrieval_context(retrieval_result) -> str:
     lines = ["## Retrieval Results (from vector search of the actual documentation):"]
     for i, chunk in enumerate(retrieval_result.chunks):
         lines.append(
-            f'  {i + 1}. [{chunk.doc_id}] "{chunk.title}" — section: {chunk.section_name} '
+            f"  {i+1}. [{chunk.doc_id}] \"{chunk.title}\" — section: {chunk.section_name} "
             f"(relevance: {chunk.relevance_score:.2f})"
         )
     lines.append("")
@@ -338,22 +314,11 @@ def _format_retrieval_context(retrieval_result) -> str:
 # contains these signals, the system must escalate to a human even though the
 # rollback *procedure* is documented — the root cause still needs investigation.
 _ACTIVE_BREAKAGE_KEYWORDS = [
-    "breaking",
-    "broken",
-    "down",
-    "outage",
-    "incident",
-    "customers affected",
-    "customer-facing",
-    "impacting customers",
-    "production issue",
-    "service disruption",
-    "critical failure",
-    "cannot process",
-    "payments failing",
-    "checkout broken",
-    "orders failing",
-    "500 errors in production",
+    "breaking", "broken", "down", "outage", "incident",
+    "customers affected", "customer-facing", "impacting customers",
+    "production issue", "service disruption", "critical failure",
+    "cannot process", "payments failing", "checkout broken",
+    "orders failing", "500 errors in production",
 ]
 
 
@@ -399,9 +364,7 @@ def _apply_answerable_overrides(
                     keyword,
                 )
                 result.answerable_from_docs = False
-                result.answerable_confidence = max(
-                    0.3, result.answerable_confidence - 0.3
-                )
+                result.answerable_confidence = max(0.3, result.answerable_confidence - 0.3)
                 result.reasoning += (
                     f" [OVERRIDE: Active breakage detected ('{keyword}'). "
                     f"Rollback procedure exists in docs but this ticket "
@@ -414,12 +377,8 @@ def _apply_answerable_overrides(
     # impact should not be auto-responded even if docs cover the topic.
     if result.intent == "database_issue" and result.answerable_from_docs:
         db_incident_keywords = [
-            "exhausted",
-            "no available connections",
-            "connection refused",
-            "database down",
-            "cannot connect",
-            "production database",
+            "exhausted", "no available connections", "connection refused",
+            "database down", "cannot connect", "production database",
         ]
         for keyword in db_incident_keywords:
             if keyword in text_lower:
@@ -429,9 +388,7 @@ def _apply_answerable_overrides(
                     keyword,
                 )
                 result.answerable_from_docs = False
-                result.answerable_confidence = max(
-                    0.3, result.answerable_confidence - 0.3
-                )
+                result.answerable_confidence = max(0.3, result.answerable_confidence - 0.3)
                 result.reasoning += (
                     f" [OVERRIDE: Active database incident detected ('{keyword}'). "
                     f"Needs human investigation of customer's specific environment.]"
@@ -445,25 +402,24 @@ def _apply_answerable_overrides(
 # Core classification function
 # ---------------------------------------------------------------------------
 
-
 def classify_ticket(
-    ticket: StandardTicket, client: OpenAI | None = None
+    ticket: StandardTicket,
+    llm: Optional[ChatOpenAI] = None,
 ) -> ClassificationResult:
     """
-    Classify a single support ticket using the Groq LLM.
+    Classify a single support ticket using LangChain ChatOpenAI.
 
     This function:
     1. Builds the classification prompt with the ticket text
-    2. Includes retrieval context (if available) so the classifier can
-       make an INFORMED decision about answerable_from_docs instead of guessing
-    3. Sends it to the LLM via Groq's API
-    4. Parses the JSON response
-    5. Validates it through the ClassificationResult Pydantic model
+    2. Sends it to the LLM via LangChain's ChatOpenAI interface
+    3. Parses the JSON response
+    4. Validates it through the ClassificationResult Pydantic model
+    5. Applies post-classification safety overrides
     6. Returns the validated classification
 
     Args:
         ticket: A StandardTicket from the ingest stage
-        client: Optional pre-configured OpenAI client (for reuse / testing)
+        llm: Optional pre-configured ChatOpenAI instance (for reuse / testing)
     Returns:
         ClassificationResult with intent, urgency, confidence scores, etc.
 
@@ -471,8 +427,8 @@ def classify_ticket(
         ValueError: If the LLM returns invalid/unparseable output
         Exception: If the API call fails (network, auth, rate limit)
     """
-    if client is None:
-        client = get_groq_client()
+    if llm is None:
+        llm = get_llm()
 
     # Build the prompt with the ticket's combined text
     ticket_text = ticket.combined_text()
@@ -482,21 +438,16 @@ def classify_ticket(
 
     logger.info("Classifying ticket %s", ticket.ticket_id)
 
-    # Call the LLM
-    response = client.chat.completions.create(
-        model=MODEL_NAME,
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a precise support ticket classifier. Always respond with valid JSON only.",
-            },
-            {"role": "user", "content": prompt},
-        ],
-        temperature=0.1,  # Low temperature for consistent, deterministic classification
-        max_tokens=500,  # Classification doesn't need long responses
-    )
+    # Call the LLM via LangChain
+    messages = [
+        SystemMessage(content="You are a precise support ticket classifier. Always respond with valid JSON only."),
+        HumanMessage(content=prompt),
+    ]
 
-    raw_response = response.choices[0].message.content.strip()
+    # Override temperature for classification (deterministic)
+    response = llm.invoke(messages, temperature=0.1, max_tokens=500)
+
+    raw_response = response.content.strip()
     logger.debug("Raw LLM response for %s: %s", ticket.ticket_id, raw_response)
 
     # Parse the JSON from the response
@@ -525,48 +476,44 @@ def classify_ticket(
 
 def classify_tickets(
     tickets: list[StandardTicket],
-    client: OpenAI | None = None,
+    llm: Optional[ChatOpenAI] = None,
 ) -> list[ClassificationResult]:
     """
     Classify a batch of tickets.
 
-    Processes sequentially to respect Groq's rate limits on the free tier.
+    Processes sequentially to respect rate limits on the free tier.
     Each ticket gets its own API call.
 
     Args:
         tickets: List of StandardTickets to classify
-        client: Optional pre-configured client (reused across all calls)
+        llm: Optional pre-configured ChatOpenAI instance (reused across all calls)
 
     Returns:
         List of ClassificationResults in the same order as input
     """
-    if client is None:
-        client = get_groq_client()
+    if llm is None:
+        llm = get_llm()
 
     results = []
     for i, ticket in enumerate(tickets):
-        logger.info(
-            "Classifying ticket %d/%d: %s", i + 1, len(tickets), ticket.ticket_id
-        )
+        logger.info("Classifying ticket %d/%d: %s", i + 1, len(tickets), ticket.ticket_id)
         try:
-            result = classify_ticket(ticket, client=client)
+            result = classify_ticket(ticket, llm=llm)
             results.append(result)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error("Failed to classify %s: %s", ticket.ticket_id, e)
             # Return a low-confidence unclear_request as fallback
             # This ensures the pipeline never crashes on a single bad ticket
-            results.append(
-                ClassificationResult(
-                    intent="unclear_request",
-                    intent_confidence=0.0,
-                    urgency="medium",
-                    urgency_confidence=0.0,
-                    answerable_from_docs=False,
-                    answerable_confidence=0.0,
-                    must_not_auto_respond=True,
-                    reasoning=f"Classification failed: {e}",
-                )
-            )
+            results.append(ClassificationResult(
+                intent="unclear_request",
+                intent_confidence=0.0,
+                urgency="medium",
+                urgency_confidence=0.0,
+                answerable_from_docs=False,
+                answerable_confidence=0.0,
+                must_not_auto_respond=True,
+                reasoning=f"Classification failed: {e}",
+            ))
 
     return results
 
@@ -574,7 +521,6 @@ def classify_tickets(
 # ---------------------------------------------------------------------------
 # Helper: extract JSON from LLM response
 # ---------------------------------------------------------------------------
-
 
 def _extract_json(text: str) -> dict:
     """

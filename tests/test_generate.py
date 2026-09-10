@@ -2,7 +2,7 @@
 Unit tests for the generate module.
 
 Tests the generation pipeline WITHOUT calling the real LLM.
-We mock the Groq/OpenAI client to test prompt construction,
+We mock the LangChain ChatOpenAI to test prompt construction,
 citation extraction, and the could_answer detection logic.
 """
 
@@ -73,15 +73,16 @@ def make_retrieval_result(num_chunks=2) -> RetrievalResult:
     return RetrievalResult(query="container deployment failing", chunks=chunks)
 
 
-def make_mock_client(response_text: str) -> MagicMock:
-    """Create a mock OpenAI client that returns the given response text."""
-    client = MagicMock()
-    mock_choice = MagicMock()
-    mock_choice.message.content = response_text
+def make_mock_llm(response_text: str) -> MagicMock:
+    """Create a mock LangChain ChatOpenAI that returns the given response text.
+
+    LangChain's invoke() returns an AIMessage with a .content attribute.
+    """
+    llm = MagicMock()
     mock_response = MagicMock()
-    mock_response.choices = [mock_choice]
-    client.chat.completions.create.return_value = mock_response
-    return client
+    mock_response.content = response_text
+    llm.invoke.return_value = mock_response
+    return llm
 
 
 # ---------------------------------------------------------------------------
@@ -232,7 +233,7 @@ class TestGeneratedResponseModel:
 
 
 class TestGenerateResponse:
-    """Tests for generate_response with a mocked LLM client."""
+    """Tests for generate_response with a mocked LangChain LLM."""
 
     def test_basic_generation(self):
         """generate_response returns a valid GeneratedResponse."""
@@ -243,12 +244,12 @@ class TestGenerateResponse:
             "---\n"
             "This is an automated response from CloudServe Support."
         )
-        client = make_mock_client(mock_response)
+        llm = make_mock_llm(mock_response)
         ticket = make_ticket()
         classification = make_classification()
         retrieval = make_retrieval_result()
 
-        result = generate_response(ticket, classification, retrieval, client=client)
+        result = generate_response(ticket, classification, retrieval, llm=llm)
 
         assert isinstance(result, GeneratedResponse)
         assert "DOC-DEPLOY-001" in result.cited_doc_ids
@@ -258,32 +259,35 @@ class TestGenerateResponse:
 
     def test_prompt_includes_ticket_info(self):
         """The prompt sent to the LLM contains ticket subject and body."""
-        client = make_mock_client("Test response.")
+        llm = make_mock_llm("Test response.")
         ticket = make_ticket(subject="Billing error", body="I was charged twice")
         classification = make_classification(intent="billing_query")
         retrieval = make_retrieval_result()
 
-        generate_response(ticket, classification, retrieval, client=client)
+        generate_response(ticket, classification, retrieval, llm=llm)
 
-        # Check what was sent to the LLM
-        call_args = client.chat.completions.create.call_args
-        messages = call_args.kwargs["messages"]
-        user_prompt = messages[1]["content"]
+        # Check what was sent to the LLM — LangChain invoke receives a list of messages
+        call_args = llm.invoke.call_args
+        messages = call_args[0][0]  # first positional arg is the messages list
+        # The user message is the second message (index 1)
+        user_message = messages[1]
+        user_prompt = user_message.content
         assert "Billing error" in user_prompt
         assert "I was charged twice" in user_prompt
         assert "billing_query" in user_prompt
 
     def test_prompt_includes_context_block(self):
         """The prompt sent to the LLM contains the retrieved documentation."""
-        client = make_mock_client("Test response.")
+        llm = make_mock_llm("Test response.")
         ticket = make_ticket()
         classification = make_classification()
         retrieval = make_retrieval_result()
 
-        generate_response(ticket, classification, retrieval, client=client)
+        generate_response(ticket, classification, retrieval, llm=llm)
 
-        call_args = client.chat.completions.create.call_args
-        user_prompt = call_args.kwargs["messages"][1]["content"]
+        call_args = llm.invoke.call_args
+        messages = call_args[0][0]
+        user_prompt = messages[1].content
         assert "DOC-DEPLOY-001" in user_prompt
         assert "Deployment Guide 1" in user_prompt
 
@@ -293,36 +297,36 @@ class TestGenerateResponse:
             "I wasn't able to find a specific answer in our documentation. "
             "Let me escalate this to a specialist."
         )
-        client = make_mock_client(escalation_response)
+        llm = make_mock_llm(escalation_response)
         ticket = make_ticket()
         classification = make_classification()
         retrieval = make_retrieval_result()
 
-        result = generate_response(ticket, classification, retrieval, client=client)
+        result = generate_response(ticket, classification, retrieval, llm=llm)
         assert result.could_answer is False
 
     def test_temperature_is_low(self):
         """Generation uses temperature 0.3 — creative enough but grounded."""
-        client = make_mock_client("Response.")
+        llm = make_mock_llm("Response.")
         ticket = make_ticket()
         classification = make_classification()
         retrieval = make_retrieval_result()
 
-        generate_response(ticket, classification, retrieval, client=client)
+        generate_response(ticket, classification, retrieval, llm=llm)
 
-        call_args = client.chat.completions.create.call_args
+        call_args = llm.invoke.call_args
         assert call_args.kwargs["temperature"] == 0.3
 
     def test_max_tokens_is_reasonable(self):
         """max_tokens is set to keep responses concise."""
-        client = make_mock_client("Response.")
+        llm = make_mock_llm("Response.")
         ticket = make_ticket()
         classification = make_classification()
         retrieval = make_retrieval_result()
 
-        generate_response(ticket, classification, retrieval, client=client)
+        generate_response(ticket, classification, retrieval, llm=llm)
 
-        call_args = client.chat.completions.create.call_args
+        call_args = llm.invoke.call_args
         assert call_args.kwargs["max_tokens"] == 1000
 
     def test_multiple_citations_extracted(self):
@@ -332,12 +336,12 @@ class TestGenerateResponse:
             "For deployment, see [DOC-DEPLOY-002]. "
             "Also review [DOC-PERF-003] for performance."
         )
-        client = make_mock_client(multi_cite_response)
+        llm = make_mock_llm(multi_cite_response)
         ticket = make_ticket()
         classification = make_classification()
         retrieval = make_retrieval_result()
 
-        result = generate_response(ticket, classification, retrieval, client=client)
+        result = generate_response(ticket, classification, retrieval, llm=llm)
         assert result.cited_doc_ids == [
             "DOC-AUTH-001",
             "DOC-DEPLOY-002",
@@ -346,12 +350,12 @@ class TestGenerateResponse:
 
     def test_reasoning_field_populated(self):
         """The reasoning field records chunk and citation counts."""
-        client = make_mock_client("Response [DOC-DEPLOY-001].")
+        llm = make_mock_llm("Response [DOC-DEPLOY-001].")
         ticket = make_ticket()
         classification = make_classification()
         retrieval = make_retrieval_result(num_chunks=3)
 
-        result = generate_response(ticket, classification, retrieval, client=client)
+        result = generate_response(ticket, classification, retrieval, llm=llm)
         assert "3 retrieved chunks" in result.reasoning
         assert "1 citations" in result.reasoning
 

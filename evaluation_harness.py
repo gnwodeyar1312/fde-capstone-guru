@@ -6,9 +6,9 @@ Requirement: FR-09 — The evaluation harness shall accept --input and --output
 file paths as command-line arguments. No file paths may be hardcoded.
 
 Purpose:
-    Run the COMPLETE pipeline on every ticket in the input file and produce
-    a structured output file with predictions, decisions, and ground truth
-    for scoring. This is the script that THE GATE (B-11) will run.
+    Run the COMPLETE LangGraph pipeline on every ticket in the input file and
+    produce a structured output file with predictions, decisions, and ground
+    truth for scoring. This is the script that THE GATE (B-11) will run.
 
 Usage:
     python -m evaluation.harness --input data/development_tickets.json --output results/output.json
@@ -23,9 +23,9 @@ Design decisions:
        it as a failed ticket, and continue to DEV-043. The output file
        includes the error so we can debug it.
     2. Rate limiting is handled with exponential backoff.
-       Why? The Groq free tier has rate limits (~30 req/min). We need to
-       process 500+ tickets without hitting the wall. Backoff with jitter
-       lets us stay under the limit without wasting time.
+       Why? The free tier has rate limits. We need to process 500+ tickets
+       without hitting the wall. Backoff with jitter lets us stay under
+       the limit without wasting time.
     3. The output file includes BOTH predictions AND ground truth.
        Why? The evaluation report needs to compare them. Putting both in
        one file means the report script doesn't need to re-read the input.
@@ -35,17 +35,21 @@ Design decisions:
     5. The vector store is built ONCE at startup, not per-ticket.
        Why? Embedding 29 docs takes ~5 seconds. Doing it 500 times would
        take 40 minutes of pure embedding overhead.
+    6. The pipeline is orchestrated by LangGraph StateGraph.
+       Why? LangGraph makes the pipeline stages explicit and composable.
+       Each stage is a node; conditional edges handle routing (escalate
+       vs. auto-respond). The harness invokes the compiled graph per ticket.
 
 Interview context:
     "How do you run the full evaluation?"
-    → python -m evaluation.harness --input data/development_tickets.json
+    → python evaluation_harness.py --input data/development_tickets.json
       --output results/output.json
     "What if the LLM API is down?"
     → Each ticket has a try/except. Failed tickets are recorded with the
       error message. The pipeline continues. The output file tells you
       exactly which tickets failed and why.
     "How long does a full run take?"
-    → ~30-60 minutes for 500 tickets on the Groq free tier. The bottleneck
+    → ~30-60 minutes for 500 tickets on the free tier. The bottleneck
       is the LLM API calls (classification + generation = 2 calls per
       auto-respond ticket, 1 for escalated tickets). Retrieval and
       guardrails are instant (local embedding + deterministic checks).
@@ -63,13 +67,14 @@ from pathlib import Path
 # Ensure project root is on path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from src.config import validate_config
+from src.config import validate_config, get_llm
 from src.ingest import ingest_tickets
 from src.classify import classify_ticket
 from src.retrieve import retrieve_for_ticket, build_vector_store
 from src.route import route_ticket
 from src.generate import generate_response
 from src.guardrails import validate_response
+from src.pipeline import run_ticket, get_pipeline
 from src.logging_store import init_database, log_decision, build_decision_record, get_summary_stats
 
 logger = logging.getLogger(__name__)
@@ -82,14 +87,6 @@ logger = logging.getLogger(__name__)
 def _wait_with_backoff(attempt: int, base_delay: float = 5.0, max_delay: float = 120.0):
     """
     Exponential backoff with jitter for rate limit handling.
-
-    Groq free tier limits (Qwen models):
-        - 30 RPM (requests per minute)
-        - 1,000 RPD (requests per day)
-        - 8,000 TPM (tokens per minute)
-        - 200,000 TPD (tokens per day)
-
-    We use aggressive backoff to stay within these limits.
 
     Args:
         attempt: Which retry attempt (0-based)
@@ -106,9 +103,8 @@ def _call_with_retry(func, *args, max_retries: int = 5, **kwargs):
     """
     Call a function with retry on rate limit errors.
 
-    Catches common rate-limit and transient errors from Groq API
-    and retries with exponential backoff. Uses 5 retries (not 3)
-    because the Groq free tier rate-limits aggressively.
+    Catches common rate-limit and transient errors and retries with
+    exponential backoff.
     """
     for attempt in range(max_retries + 1):
         try:
@@ -131,12 +127,12 @@ def _call_with_retry(func, *args, max_retries: int = 5, **kwargs):
 
 
 # ---------------------------------------------------------------------------
-# Process a single ticket through the full pipeline
+# Process a single ticket through the full LangGraph pipeline
 # ---------------------------------------------------------------------------
 
-def process_ticket(ticket_data, ticket_index: int, total: int) -> dict:
+def process_ticket(ticket_data, ticket_index: int, total: int, llm=None) -> dict:
     """
-    Run one ticket through all 6 pipeline stages.
+    Run one ticket through all 6 pipeline stages via LangGraph.
 
     Returns a result dict with predictions, decisions, and metadata.
     On failure, returns a result dict with error information.
@@ -145,11 +141,15 @@ def process_ticket(ticket_data, ticket_index: int, total: int) -> dict:
     labels = ticket_data.labels
     history = ticket_data.history
 
+    start_time = time.time()
+
     result = {
         "ticket_id": ticket.ticket_id,
         "status": "success",
         "error": None,
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "start_time": start_time,
+        "end_time": None,
 
         # Ground truth (for evaluation)
         "ground_truth": {
@@ -171,52 +171,52 @@ def process_ticket(ticket_data, ticket_index: int, total: int) -> dict:
     }
 
     try:
-        # Stage 2: Classify
-        classification = _call_with_retry(classify_ticket, ticket)
-        result["predictions"] = {
-            "intent": classification.intent,
-            "intent_confidence": classification.intent_confidence,
-            "urgency": classification.urgency,
-            "urgency_confidence": classification.urgency_confidence,
-            "answerable_from_docs": classification.answerable_from_docs,
-            "answerable_confidence": classification.answerable_confidence,
-            "must_not_auto_respond": classification.must_not_auto_respond,
-            "reasoning": classification.reasoning,
-        }
+        # Run the full pipeline via LangGraph with retry support
+        pipeline_state = _call_with_retry(run_ticket, ticket, llm)
 
-        # Stage 3: Retrieve
-        retrieval = retrieve_for_ticket(ticket)
-        result["retrieval"] = {
-            "num_chunks": retrieval.num_results,
-            "unique_doc_ids": retrieval.unique_doc_ids,
-            "chunks": [
-                {
-                    "doc_id": c.doc_id,
-                    "section_name": c.section_name,
-                    "relevance_score": round(c.relevance_score, 4),
-                }
-                for c in retrieval.chunks
-            ],
-        }
+        # Extract classification results
+        classification = pipeline_state.get("classification")
+        if classification:
+            result["predictions"] = {
+                "intent": classification.intent,
+                "intent_confidence": classification.intent_confidence,
+                "urgency": classification.urgency,
+                "urgency_confidence": classification.urgency_confidence,
+                "answerable_from_docs": classification.answerable_from_docs,
+                "answerable_confidence": classification.answerable_confidence,
+                "must_not_auto_respond": classification.must_not_auto_respond,
+                "reasoning": classification.reasoning,
+            }
 
-        # Stage 4: Route
-        route = route_ticket(classification)
-        result["route"] = {
-            "action": route.action.value,
-            "reason": route.reason,
-            "escalation_target": route.escalation_target,
-            "rule_triggered": route.rule_triggered,
-        }
+        # Extract retrieval results
+        retrieval = pipeline_state.get("retrieval")
+        if retrieval:
+            result["retrieval"] = {
+                "num_chunks": retrieval.num_results,
+                "unique_doc_ids": retrieval.unique_doc_ids,
+                "chunks": [
+                    {
+                        "doc_id": c.doc_id,
+                        "section_name": c.section_name,
+                        "relevance_score": round(c.relevance_score, 4),
+                    }
+                    for c in retrieval.chunks
+                ],
+            }
 
-        # Stage 5 & 6: Generate + Validate (only for auto_respond)
-        generation = None
-        guardrail_result = None
+        # Extract route results
+        route = pipeline_state.get("route_decision")
+        if route:
+            result["route"] = {
+                "action": route.action.value,
+                "reason": route.reason,
+                "escalation_target": route.escalation_target,
+                "rule_triggered": route.rule_triggered,
+            }
 
-        if route.is_auto_respond:
-            # Stage 5: Generate
-            generation = _call_with_retry(
-                generate_response, ticket, classification, retrieval
-            )
+        # Extract generation results (only for auto_respond)
+        generation = pipeline_state.get("generation")
+        if generation:
             result["generation"] = {
                 "response_text": generation.response_text,
                 "cited_doc_ids": generation.cited_doc_ids,
@@ -224,8 +224,9 @@ def process_ticket(ticket_data, ticket_index: int, total: int) -> dict:
                 "model_used": generation.model_used,
             }
 
-            # Stage 6: Validate
-            guardrail_result = validate_response(generation, retrieval)
+        # Extract guardrail results
+        guardrail_result = pipeline_state.get("guardrails")
+        if guardrail_result:
             result["guardrails"] = {
                 "passed": guardrail_result.passed,
                 "failed_checks": guardrail_result.failed_checks,
@@ -242,21 +243,16 @@ def process_ticket(ticket_data, ticket_index: int, total: int) -> dict:
                 ],
             }
 
-            # Determine final action
-            if guardrail_result.passed:
-                result["final_action"] = "sent"
-            else:
-                result["final_action"] = "blocked_by_guardrails"
-        else:
-            result["final_action"] = "escalated"
+        # Final action from pipeline
+        result["final_action"] = pipeline_state.get("final_action", "")
 
         # Log to decision database
         record = build_decision_record(
             ticket_id=ticket.ticket_id,
             classification=classification,
             route=route,
-            retrieval_doc_ids=retrieval.unique_doc_ids,
-            num_chunks=retrieval.num_results,
+            retrieval_doc_ids=retrieval.unique_doc_ids if retrieval else [],
+            num_chunks=retrieval.num_results if retrieval else 0,
             generation=generation,
             guardrails=guardrail_result,
             final_action=result["final_action"],
@@ -273,6 +269,7 @@ def process_ticket(ticket_data, ticket_index: int, total: int) -> dict:
         )
         logger.debug(traceback.format_exc())
 
+    result["end_time"] = time.time()
     return result
 
 
@@ -297,14 +294,23 @@ def run_harness(input_path: str, output_path: str) -> dict:
     logger.info("Validating configuration...")
     validate_config()
 
+    # Initialize LangChain LLM (shared across all tickets)
+    logger.info("Initializing LangChain ChatOpenAI LLM...")
+    llm = get_llm()
+
     # Initialize decision database
     logger.info("Initializing decision database...")
     init_database()
 
-    # Build vector store (once, not per-ticket)
-    logger.info("Building vector store from documentation...")
+    # Build vector store via LangChain Chroma (once, not per-ticket)
+    logger.info("Building vector store from documentation (LangChain Chroma)...")
     num_chunks = build_vector_store()
     logger.info("Vector store ready: %d chunks indexed", num_chunks)
+
+    # Pre-compile the LangGraph pipeline
+    logger.info("Compiling LangGraph pipeline...")
+    get_pipeline()
+    logger.info("Pipeline compiled and ready")
 
     # Ingest all tickets
     logger.info("Ingesting tickets from %s...", input_path)
@@ -327,7 +333,7 @@ def run_harness(input_path: str, output_path: str) -> dict:
                 i, total, (i / total * 100), success_count, error_count, rate
             )
 
-        result = process_ticket(ticket_data, i, total)
+        result = process_ticket(ticket_data, i, total, llm=llm)
         results.append(result)
 
         if result["status"] == "success":
@@ -335,10 +341,7 @@ def run_harness(input_path: str, output_path: str) -> dict:
         else:
             error_count += 1
 
-        # Delay between tickets to respect Groq free tier rate limits.
-        # Groq allows 30 RPM and 8,000 TPM. Each ticket uses 1-2 API calls.
-        # 3 seconds between tickets ≈ 20 tickets/min ≈ 20-40 requests/min.
-        # This keeps us near the limit without burning through retries.
+        # Delay between tickets to respect free tier rate limits.
         if i < total - 1:
             time.sleep(6.0)
 
@@ -445,7 +448,7 @@ def run_harness(input_path: str, output_path: str) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="CloudServe Support System — Evaluation Harness",
+        description="CloudServe Support System — Evaluation Harness (LangGraph Pipeline)",
         epilog="Example: python evaluation_harness.py --input data/development_tickets.json --output results/output.json",
     )
     parser.add_argument(

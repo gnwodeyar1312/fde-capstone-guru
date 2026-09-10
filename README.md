@@ -14,6 +14,8 @@ Ticket → Ingest → Classify → Retrieve → Route → Generate → Validate 
                                           Decision Log + Monitoring
 ```
 
+The pipeline is orchestrated by **LangGraph StateGraph** with conditional edges — escalated tickets skip the Generate and Validate stages entirely.
+
 **Components:** Ingest (4 channels → 1 format) · Classify (intent + urgency + confidence) · Retrieve (semantic search via Chroma) · Route (threshold-based auto-respond vs escalate) · Generate (cited answers) · Validate (guardrails that block)
 
 ## Quick Start
@@ -25,7 +27,7 @@ git clone https://github.com/gnwodeyar1312/fde-capstone-guru.git
 cd fde-capstone-guru
 
 # Create and activate virtual environment
-python3 -m venv .venv
+python -m venv .venv
 source .venv/bin/activate        # Linux/macOS
 # .venv\Scripts\activate         # Windows
 
@@ -38,57 +40,108 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
-# Edit .env and add your GROQ_API_KEY
+# Edit .env and add your API key:
+#   OPENROUTER_API_KEY=your-key-here
 ```
+
+The system uses OpenRouter as the primary LLM provider. See `.env.example` for all available configuration options including fallback provider settings.
 
 ### 3. Run the system
 
 ```bash
-# Start the API
-python -m src.api
-
-# Run the full evaluation (unattended)
-python -m evaluation.harness --input data/validation_tickets.json --output evaluation/results/
+# Run the full evaluation harness
+python evaluation_harness.py --input data/development_tickets.json --output results/output.json
 
 # Run tests
 python -m pytest tests/ -v
+
+# Launch the monitoring dashboard
+streamlit run src/dashboard.py
 ```
 
 ## Project Structure
 
 ```
-├── README.md                    Setup and run instructions
-├── requirements.txt             Pinned dependencies
-├── .env.example                 Environment variable template
+├── README.md                       Setup and run instructions
+├── requirements.txt                Pinned dependencies
+├── .env.example                    Environment variable template
+├── evaluation_harness.py           Evaluation harness entry point (FR-09)
 ├── src/
-│   ├── ingest.py               Normalise tickets from all four channels
-│   ├── classify.py             Intent and urgency with confidence
-│   ├── retrieve.py             Vector search over documentation
-│   ├── route.py                Escalation decision and threshold
-│   ├── generate.py             Answer drafting with citations
-│   ├── guardrails.py           Checks that can block a response
-│   ├── logging_store.py        Decision log
-│   ├── api.py                  FastAPI application
-│   └── config.py               Configuration management
+│   ├── ingest.py                   Normalise tickets from 4 channels
+│   ├── classify.py                 Intent + urgency classification (LLM)
+│   ├── retrieve.py                 Semantic search via LangChain Chroma
+│   ├── route.py                    Threshold-based escalation routing
+│   ├── generate.py                 Cited answer generation (LLM)
+│   ├── guardrails.py               5 checks that can block a response
+│   ├── pipeline.py                 LangGraph StateGraph orchestration
+│   ├── config.py                   LLM + provider configuration
+│   ├── logging_store.py            SQLite decision log
+│   ├── monitoring.py               Metrics collection and reporting
+│   ├── fairness_audit.py           Bias detection across customer tiers
+│   ├── dashboard.py                Streamlit monitoring dashboard
+│   └── api.py                      FastAPI application
 ├── prompts/
-│   ├── build/                  Prompts used inside the system
-│   └── evaluation/             Prompts used to judge output
-├── tests/                      Test suite
+│   ├── README.md                   Prompt register and traceability
+│   ├── build/
+│   │   ├── PR-01_classification.md Classification prompt (FR-01/FR-02/FR-03)
+│   │   └── PR-02_generation.md     Generation prompt (FR-04/FR-05/FR-06)
+│   └── evaluation/
+│       ├── PE-01_quality_assessment.md  Quality dimensions and thresholds
+│       └── PE-02_citation_check.md      Citation validation logic
+├── tests/                          157 tests across all components
 ├── evaluation/
-│   ├── harness.py              Runs evaluation end to end
-│   └── results/                Dated output from each run
-├── docs/                       Architecture notes
-├── data/                       Sample data only
-└── .github/workflows/ci.yml    Continuous integration
+│   ├── harness.py                  Module entry point
+│   └── results/                    Dated output from each run
+├── data/
+│   ├── knowledge_base/             29 CloudServe documentation articles
+│   ├── development_tickets.json    500 labeled tickets for development
+│   └── validation_tickets.json     80 tickets for validation (do not tune)
+├── docs/                           Architecture and design notes
+└── .github/workflows/ci.yml        GitHub Actions CI pipeline
 ```
 
 ## Tech Stack
 
 - **Language:** Python 3.10+
-- **Orchestration:** LangChain + LangGraph
-- **Vector Store:** Chroma with all-MiniLM-L6-v2 embeddings
-- **LLM:** Groq (Llama 3.1 8B, free tier)
-- **API:** FastAPI
-- **Database:** SQLite (decision log)
-- **Monitoring:** Prometheus + Grafana
+- **Orchestration:** LangChain + LangGraph (StateGraph with conditional edges)
+- **LLM Provider:** OpenRouter (primary), Groq (fallback)
+- **LLM Model:** Llama 3.1 8B Instant (free tier)
+- **Vector Store:** LangChain Chroma with all-MiniLM-L6-v2 embeddings
+- **Monitoring:** Streamlit dashboard + SQLite decision log
 - **CI:** GitHub Actions
+- **Testing:** pytest (157 tests)
+
+## Key Metrics (Validation Run)
+
+| Metric | Result | Threshold |
+|---|---|---|
+| Intent accuracy | 96.5% | >= 80% |
+| Route accuracy | 73.7% | >= 90% |
+| Citation accuracy | 100% | >= 90% |
+| Guardrail pass rate | 97.2% | — |
+| Pipeline crashes | 0 | 0 (NFR-02) |
+
+## Evaluation
+
+The evaluation harness (FR-09) processes every ticket through the full LangGraph pipeline and produces a structured JSON output with predictions and ground truth for scoring:
+
+```bash
+python evaluation_harness.py --input data/development_tickets.json --output results/output.json
+```
+
+Individual ticket failures do not crash the pipeline — errors are logged and the harness continues (NFR-02). Rate limiting is handled with exponential backoff. Progress is logged every 10 tickets.
+
+## Testing
+
+```bash
+# All tests
+python -m pytest tests/ -v
+
+# Individual modules
+python -m pytest tests/test_classify.py -v
+python -m pytest tests/test_generate.py -v
+python -m pytest tests/test_guardrails.py -v
+python -m pytest tests/test_route.py -v
+python -m pytest tests/test_retrieve.py -v
+python -m pytest tests/test_ingest.py -v
+```
