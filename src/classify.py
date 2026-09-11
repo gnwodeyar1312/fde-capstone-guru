@@ -185,9 +185,26 @@ Analyze the following support ticket and classify it.
 - webhook_issue: Problems with webhook delivery, configuration, or payloads
 
 ## Urgency Levels:
-- low: General questions, no service impact, can wait 24+ hours
-- medium: Some inconvenience but workarounds exist, should be addressed within hours
-- high: Service is down, security risk, or business-critical blocker needing immediate attention
+Urgency reflects BUSINESS IMPACT to the customer, not the technical severity of the topic.
+
+- **low**: No active service disruption. Informational questions, how-to requests, setup tasks, billing inquiries about past charges, feature requests, configuration that isn't blocking work. The customer can continue their normal work while waiting. Can wait 24+ hours.
+  Examples: "How do I set up SSO?", "What are my API rate limits?", "Can you explain this invoice charge?", "I'd like to request a new feature", "Help me configure webhooks", "How do I export data?", "Questions about data residency policies"
+
+- **medium**: The customer is experiencing a problem that affects their work but is NOT a complete outage. Individual errors, single-user access issues, non-critical failures with potential workarounds. Something is broken for THIS customer but not necessarily an emergency. Should be addressed within hours.
+  Examples: "My API key is returning 401 errors", "I can't log in to my account", "My deployment failed", "Build is failing during dependency resolution", "SSO authentication is failing for our team", "Webhook deliveries are delayed", "I need to roll back my last release"
+
+- **high**: ONLY for widespread outage, confirmed security breach, or an issue that is actively causing financial/data loss RIGHT NOW. The key test: is this affecting multiple users, losing money, or risking data? If it's a single user's individual problem (even a frustrating one), it's medium, not high.
+  Examples: "Our production database is completely down", "We detected unauthorized access to our account", "Billing system charged us $50,000 incorrectly and we need immediate reversal", "All customer-facing APIs returning 500 errors", "Data breach — customer PII may be exposed", "Complete service outage affecting all our users"
+
+## Common urgency mistakes to avoid:
+- A single user's authentication failure = medium (not high), unless it indicates a security breach
+- API key errors for one customer = medium (not high)
+- Deployment failures = medium (not high), unless production is down for end users
+- Billing questions about understanding charges = low (not medium)
+- Feature requests = low, always
+- Rollback requests = medium (not high), unless there's an active production outage
+- "Not working" or "error" in the ticket does NOT automatically mean high — most individual errors are medium
+- Billing disputes involving large incorrect charges or financial harm = high (not low)
 
 ## Answerable from Documentation:
 CloudServe has 29 official documentation articles covering these specific topics:
