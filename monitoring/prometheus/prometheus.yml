@@ -1,0 +1,22 @@
+# Prometheus Configuration for CloudServe Support System
+# Collects metrics every 2s for high-resolution, real-time monitoring
+
+global:
+  scrape_interval: 2s
+  evaluation_interval: 2s
+  scrape_timeout: 2s
+
+rule_files:
+  - "alert.rules.yml"
+
+scrape_configs:
+  - job_name: "cloudserve-app"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets:
+          - "host.docker.internal:8000"  # Containerized Prometheus -> Host application
+          - "localhost:8000"            # Standalone Prometheus -> Local application
+          - "app:8000"                  # Docker Compose app container
+        labels:
+          environment: "production"
+          service: "cloudserve-support-system"

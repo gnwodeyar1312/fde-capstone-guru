@@ -38,6 +38,7 @@ Interview context:
 """
 
 import logging
+import time
 from typing import Any, TypedDict
 
 from langgraph.graph import StateGraph, END
@@ -47,6 +48,17 @@ from src.config import get_llm
 from src.generate import GeneratedResponse, generate_response
 from src.guardrails import GuardrailResult, validate_response
 from src.ingest import StandardTicket
+from src.metrics import (
+    track_stage_duration,
+    track_in_flight,
+    record_classification_metrics,
+    record_retrieval_metrics,
+    record_routing_metrics,
+    record_generation_metrics,
+    record_guardrail_metrics,
+    record_ticket_completion,
+    record_error,
+)
 from src.retrieve import RetrievalResult, retrieve_for_ticket
 from src.route import RouteDecision, route_ticket
 
@@ -94,21 +106,27 @@ def classify_node(state: PipelineState) -> dict:
     """Stage 2: Classify the ticket using LangChain ChatOpenAI."""
     ticket = state["ticket"]
     llm = state.get("llm")
-    classification = classify_ticket(ticket, llm=llm)
+    with track_stage_duration("classify"):
+        classification = classify_ticket(ticket, llm=llm)
+    record_classification_metrics(classification)
     return {"classification": classification}
 
 
 def retrieve_node(state: PipelineState) -> dict:
     """Stage 3: Retrieve relevant documentation chunks via LangChain Chroma."""
     ticket = state["ticket"]
-    retrieval = retrieve_for_ticket(ticket)
+    with track_stage_duration("retrieve"):
+        retrieval = retrieve_for_ticket(ticket)
+    record_retrieval_metrics(retrieval)
     return {"retrieval": retrieval}
 
 
 def route_node(state: PipelineState) -> dict:
     """Stage 4: Route the ticket (deterministic rules, no LLM)."""
     classification = state["classification"]
-    decision = route_ticket(classification)
+    with track_stage_duration("route"):
+        decision = route_ticket(classification)
+    record_routing_metrics(decision)
     return {"route_decision": decision}
 
 
@@ -118,7 +136,9 @@ def generate_node(state: PipelineState) -> dict:
     classification = state["classification"]
     retrieval = state["retrieval"]
     llm = state.get("llm")
-    generation = generate_response(ticket, classification, retrieval, llm=llm)
+    with track_stage_duration("generate"):
+        generation = generate_response(ticket, classification, retrieval, llm=llm)
+    record_generation_metrics(generation)
     return {"generation": generation}
 
 
@@ -126,13 +146,15 @@ def validate_node(state: PipelineState) -> dict:
     """Stage 6: Validate the generated response through guardrails."""
     generation = state["generation"]
     retrieval = state["retrieval"]
-    guardrail_result = validate_response(generation, retrieval)
+    with track_stage_duration("validate"):
+        guardrail_result = validate_response(generation, retrieval)
 
     if guardrail_result.passed:
         final_action = "sent"
     else:
         final_action = "blocked_by_guardrails"
 
+    record_guardrail_metrics(guardrail_result)
     return {"guardrails": guardrail_result, "final_action": final_action}
 
 
@@ -244,5 +266,19 @@ def run_ticket(ticket: StandardTicket, llm=None) -> PipelineState:
         "llm": llm,
     }
 
-    result = pipeline.invoke(initial_state)
-    return result
+    start_time = time.time()
+    channel = getattr(ticket, "channel", "unknown") or "unknown"
+    tier = getattr(ticket, "customer_tier", "unknown") or "unknown"
+
+    with track_in_flight(channel):
+        try:
+            result = pipeline.invoke(initial_state)
+            duration = time.time() - start_time
+            final_action = result.get("final_action", "unknown")
+            record_ticket_completion(channel, tier, "success", final_action, duration)
+            return result
+        except Exception as e:
+            duration = time.time() - start_time
+            record_error(type(e).__name__, "pipeline")
+            record_ticket_completion(channel, tier, "error", "error", duration)
+            raise

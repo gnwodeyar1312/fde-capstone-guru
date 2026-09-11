@@ -55,8 +55,12 @@ python evaluation_harness.py --input data/development_tickets.json --output resu
 # Run tests
 python -m pytest tests/ -v
 
-# Launch the monitoring dashboard
-streamlit run src/dashboard.py
+# Start the API server (exposes /metrics for Prometheus)
+uvicorn src.api:app --host 0.0.0.0 --port 8000
+
+# Start Prometheus + Grafana monitoring stack
+docker compose -f docker-compose.monitoring.yml up -d
+# Prometheus: http://localhost:9090  |  Grafana: http://localhost:3000
 ```
 
 ## Project Structure
@@ -76,10 +80,11 @@ streamlit run src/dashboard.py
 │   ├── pipeline.py                 LangGraph StateGraph orchestration
 │   ├── config.py                   LLM + provider configuration
 │   ├── logging_store.py            SQLite decision log
-│   ├── monitoring.py               Metrics collection and reporting
+│   ├── metrics.py                  Prometheus metrics instrumentation
+│   ├── monitoring.py               Metrics computation and reporting
 │   ├── fairness_audit.py           Bias detection across customer tiers
-│   ├── dashboard.py                Streamlit monitoring dashboard
-│   └── api.py                      FastAPI application
+│   ├── dashboard.py                Streamlit dashboard (legacy)
+│   └── api.py                      FastAPI app with /metrics endpoint
 ├── prompts/
 │   ├── README.md                   Prompt register and traceability
 │   ├── build/
@@ -96,6 +101,14 @@ streamlit run src/dashboard.py
 │   ├── knowledge_base/             29 CloudServe documentation articles
 │   ├── development_tickets.json    500 labeled tickets for development
 │   └── validation_tickets.json     80 tickets for validation (do not tune)
+├── monitoring/
+│   ├── prometheus/
+│   │   ├── prometheus.yml          Scrape config (2s interval)
+│   │   └── alert.rules.yml         Alert rules (error rate, guardrails, rate limits)
+│   └── grafana/
+│       ├── dashboards/             Pre-built Grafana dashboard JSON
+│       └── provisioning/           Auto-provisioned datasource + dashboard config
+├── docker-compose.monitoring.yml   Prometheus + Grafana stack
 ├── docs/                           Architecture and design notes
 └── .github/workflows/ci.yml        GitHub Actions CI pipeline
 ```
@@ -107,19 +120,23 @@ streamlit run src/dashboard.py
 - **LLM Provider:** OpenRouter (primary), Groq (fallback)
 - **LLM Model:** Llama 3.1 8B Instant (free tier)
 - **Vector Store:** LangChain Chroma with all-MiniLM-L6-v2 embeddings
-- **Monitoring:** Streamlit dashboard + SQLite decision log
+- **API:** FastAPI with Prometheus /metrics endpoint
+- **Monitoring:** Prometheus + Grafana (Docker Compose) with alert rules
+- **Database:** SQLite (decision log)
 - **CI:** GitHub Actions
 - **Testing:** pytest (157 tests)
 
-## Key Metrics (Validation Run)
+## Key Metrics
 
-| Metric | Result | Threshold |
-|---|---|---|
-| Intent accuracy | 96.5% | >= 80% |
-| Route accuracy | 73.7% | >= 90% |
-| Citation accuracy | 100% | >= 90% |
-| Guardrail pass rate | 97.2% | — |
-| Pipeline crashes | 0 | 0 (NFR-02) |
+| Metric | Dev batch (20) | Validation (57/80) | Threshold |
+|---|---|---|---|
+| Intent accuracy | 100% | 96.5% | >= 80% |
+| Route accuracy | 100% | 73.7% | >= 90% |
+| Urgency accuracy | 30.0% | 40.4% | — |
+| Doc hit rate | 93.3% | — | — |
+| Guardrail pass rate | 92.3% | 97.2% | — |
+| Pipeline crashes | 0 | 0 | 0 (NFR-02) |
+| MNR compliance | 100% | — | 100% |
 
 ## Evaluation
 

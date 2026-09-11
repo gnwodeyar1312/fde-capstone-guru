@@ -61,18 +61,60 @@ python evaluation_harness.py --input data/development_tickets.json --output resu
 > A 50-ticket run uses ~20K tokens. Full 500-ticket run needs ~100K+ tokens
 > and may need to be split across days or upgraded to a paid tier.
 
-## 4. Analyze Results
+## 4. Real-Time Observability & Monitoring (Prometheus + Grafana)
+
+You can run the monitoring stack in either of two ways: **Without Docker (Standalone Windows Binaries)** or **With Docker Desktop**.
+
+### Option A: Without Docker (Standalone on Windows — Recommended if Docker is not installed)
+
+We provide a 1-click script that automatically downloads portable standalone Windows versions of Prometheus & Grafana and starts both:
 
 ```bash
-# Generate monitoring metrics from a pipeline run
-python src/monitoring.py --input results/output_5.json
+# In PowerShell:
+powershell -ExecutionPolicy Bypass -File scripts/start_monitoring_windows.ps1
 
-# Generate metrics and save report to file
-python src/monitoring.py --input results/output_full.json --output results/metrics_report.json
+# Or in Windows CMD:
+scripts\start_monitoring_windows.bat
+```
 
-# Launch the monitoring dashboard (opens in browser)
-streamlit run src/dashboard.py
-# Then open: http://localhost:8501
+- **Prometheus UI:** [http://localhost:9090](http://localhost:9090)
+- **Grafana Live Dashboard:** [http://localhost:3000](http://localhost:3000) *(User: `admin` / Password: `admin`)*
+
+---
+
+### Option B: With Docker Desktop (If Docker is installed)
+
+```bash
+# Start Prometheus & Grafana in background (Docker Compose v2)
+docker compose -f docker-compose.monitoring.yml up -d
+
+# Or with legacy docker-compose:
+docker-compose -f docker-compose.monitoring.yml up -d
+
+# Stop monitoring stack when done:
+docker compose -f docker-compose.monitoring.yml down
+```
+
+---
+
+### Running Tickets & Live Observation
+
+Once Prometheus & Grafana are running (via Option A or Option B), run any of the following to see live metrics flowing into Grafana:
+
+```bash
+# 1. Stream simulated tickets to observe live metric charts in Grafana in real-time
+python scripts/simulate_traffic.py --count 20 --delay 2.0 --port 8000
+
+# 2. Run evaluation harness with live Prometheus telemetry (exposed on port 8000)
+python evaluation_harness.py --input data/test_batch_20.json --output results/output_20.json
+
+# 3. Or launch the FastAPI REST application (exposes /metrics and /health at port 8000)
+uvicorn src.api:app --host 0.0.0.0 --port 8000
+# -> Test metrics endpoint: curl http://localhost:8000/metrics
+# -> Test health endpoint:  curl http://localhost:8000/health
+
+# 4. Post-hoc static analysis (legacy batch report)
+python src/monitoring.py --input results/output_20.json
 ```
 
 ## 5. Individual Pipeline Stages (for debugging)

@@ -1,0 +1,29 @@
+groups:
+  - name: cloudserve_alerts
+    rules:
+      - alert: HighPipelineErrorRate
+        expr: (sum(rate(cloudserve_errors_total[5m])) / sum(rate(cloudserve_tickets_total[5m]))) > 0.10
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pipeline error rate exceeds 10%"
+          description: "Error rate is currently above 10% for the last 5 minutes."
+
+      - alert: GuardrailFailureSpike
+        expr: (sum(rate(cloudserve_guardrails_evaluations_total{passed="false"}[5m])) / sum(rate(cloudserve_guardrails_evaluations_total[5m]))) > 0.20
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Guardrail failure rate exceeds 20%"
+          description: "More than 20% of generated responses are being blocked by safety guardrails."
+
+      - alert: HighRateLimitBackoff
+        expr: rate(cloudserve_rate_limit_events_total[5m]) > 0.2
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Frequent LLM rate-limit backoff detected"
+          description: "System is experiencing frequent 429 rate limit events from the LLM provider."

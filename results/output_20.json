@@ -2,19 +2,21 @@
   "metadata": {
     "input_file": "data/test_batch_20.json",
     "output_file": "results/output_20.json",
-    "run_timestamp": "2026-09-08T16:04:08.460758+00:00",
+    "run_timestamp": "2026-09-11T07:11:50.109636+00:00",
     "total_tickets": 20,
-    "successful": 6,
-    "errors": 14,
-    "elapsed_seconds": 2861.2,
-    "tickets_per_minute": 0.4
+    "successful": 20,
+    "errors": 0,
+    "elapsed_seconds": 618.0,
+    "tickets_per_minute": 1.9
   },
   "results": [
     {
       "ticket_id": "DEV-0001",
       "status": "success",
       "error": null,
-      "timestamp": "2026-09-08T15:17:33.520931+00:00",
+      "timestamp": "2026-09-11T07:01:49.046906+00:00",
+      "start_time": 1789110109.0469007,
+      "end_time": 1789110114.6712792,
       "ground_truth": {
         "intent": "deployment_failure",
         "urgency": "high",
@@ -33,7 +35,7 @@
         "answerable_from_docs": true,
         "answerable_confidence": 0.9,
         "must_not_auto_respond": false,
-        "reasoning": "The ticket explicitly mentions 'fail during dependency resolution' in builds. This matches the documented troubleshooting topic for 'dependency resolution build failures' under the Deployment category. Although the customer states no code changes were made (suggesting an external factor or platform issue), the specific error type is covered by existing documentation procedures for diagnosing and resolving dependency resolution issues. The urgency is high because the build pipeline is broken, blocking development or deployment workflows."
+        "reasoning": "The ticket describes a build failure specifically during 'dependency resolution'. The documentation explicitly covers 'dependency resolution build failures' under the Deployment category. Although the customer states they made no code changes, the problem type matches a documented troubleshooting scenario, so it is considered answerable from docs. The urgency is high because the build pipeline is broken, blocking development or deployment workflows."
       },
       "route": {
         "action": "auto_respond",
@@ -76,7 +78,7 @@
         ]
       },
       "generation": {
-        "response_text": "Hi there,\n\nI understand how frustrating it is when builds that were working last week suddenly start failing, especially when you haven't changed any code. I can help you troubleshoot this dependency resolution issue.\n\nBased on our documentation, this specific symptom—where builds previously succeeded but now fail without code changes—is often caused by an unpinned dependency releasing a new incompatible version, a mismatch between the build environment's language runtime and your local machine, or a corrupted dependency cache [DOC-DEPLOY-003].\n\nPlease follow these steps to resolve the issue:\n\n1.  **Pin your dependencies:** Ensure all dependencies are pinned to exact versions and that the lock file is committed to your repository. Unpinned dependencies are the most common cause of this type of failure [DOC-DEPLOY-003].\n2.  **Verify runtime versions:** Compare the language runtime version declared in your build configuration against the version you are using locally to ensure they match [DOC-DEPLOY-003].\n3.  **Clear the build cache:** Go to the settings page, clear the build cache, and trigger a fresh build. This helps rule out any partially written or corrupted artifacts in the cache [DOC-DEPLOY-003].\n4.  **Check registry connectivity:** If a specific dependency is failing to resolve, verify that its registry is reachable from the build network [DOC-DEPLOY-003].\n\nAdditionally, you can review your build logs, as they retain the full resolution output for thirty days, which should help identify exactly which dependency version changed [DOC-DEPLOY-003].\n\nPlease let me know if these steps resolve the issue or if you need further assistance.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "response_text": "Hello,\n\nI understand how frustrating it is when builds that were working last week suddenly fail without any code changes on your part. I can help you troubleshoot this dependency resolution issue.\n\nBased on our documentation, this specific symptom—where previously successful builds now fail without code changes—is often caused by unpinned dependencies releasing new incompatible versions, runtime mismatches, or corrupted build cache artifacts [DOC-DEPLOY-003].\n\nPlease follow these steps to resolve the issue:\n\n1.  **Pin your dependencies:** Ensure all dependencies are pinned to exact versions and that your lock file is committed. Unpinned dependencies are the most common cause of this type of failure [DOC-DEPLOY-003].\n2.  **Verify runtime versions:** Compare the language runtime version declared in your build configuration against the version you are using locally to ensure they match [DOC-DEPLOY-003].\n3.  **Clear the build cache:** Navigate to the settings page, clear the build cache, and trigger a fresh build. This helps rule out any partially written or corrupted artifacts in the cache [DOC-DEPLOY-003].\n4.  **Check registry reachability:** If a specific dependency is failing, verify that its registry is reachable from the build network [DOC-DEPLOY-003].\n\nAdditionally, you can review the build logs to identify exactly which version changed. Please note that build logs retain the full resolution output for thirty days [DOC-DEPLOY-003].\n\nIf these steps do not resolve the issue, please let us know, and we will have a specialist review your ticket further.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
         "cited_doc_ids": [
           "DOC-DEPLOY-003"
         ],
@@ -110,7 +112,7 @@
           {
             "name": "response_length",
             "passed": true,
-            "reason": "Response length (1790 chars) is within bounds (50-3000).",
+            "reason": "Response length (1705 chars) is within bounds (50-3000).",
             "severity": "high"
           },
           {
@@ -127,7 +129,9 @@
       "ticket_id": "DEV-0002",
       "status": "success",
       "error": null,
-      "timestamp": "2026-09-08T15:17:43.068151+00:00",
+      "timestamp": "2026-09-11T07:02:00.671948+00:00",
+      "start_time": 1789110120.6719358,
+      "end_time": 1789110124.7941403,
       "ground_truth": {
         "intent": "api_key_issue",
         "urgency": "medium",
@@ -144,7 +148,7 @@
         "answerable_from_docs": false,
         "answerable_confidence": 0.95,
         "must_not_auto_respond": false,
-        "reasoning": "The ticket describes a specific production API key failing with 401 errors without any user-initiated changes, while other keys work. This is a 'mystery' scenario requiring investigation into the specific key's status (e.g., accidental revocation, expiration, or backend anomaly) rather than a general how-to or known troubleshooting procedure. Since it affects production, the urgency is high. Documentation covers rotation and scopes, but not diagnosing unexplained sudden failures of a specific key."
+        "reasoning": "The ticket describes a specific production API key failing with 401 errors without any customer-side changes, while other keys work. This matches the 'mystery' criteria for answerable_from_docs=false because it requires investigating the specific state of that key (e.g., accidental revocation, expiration, or backend anomaly) rather than following a general troubleshooting guide for a known configuration error. The intent is api_key_issue as it concerns the usage/validity of a specific key. Urgency is high because it is a production key failure impacting live services."
       },
       "route": {
         "action": "escalate",
@@ -194,7 +198,9 @@
       "ticket_id": "DEV-0003",
       "status": "success",
       "error": null,
-      "timestamp": "2026-09-08T15:17:50.234575+00:00",
+      "timestamp": "2026-09-11T07:02:10.794377+00:00",
+      "start_time": 1789110130.79437,
+      "end_time": 1789110135.0996733,
       "ground_truth": {
         "intent": "compliance_request",
         "urgency": "medium",
@@ -206,20 +212,20 @@
         "must_not_auto_respond": true
       },
       "predictions": {
-        "intent": "data_export",
+        "intent": "compliance_request",
         "intent_confidence": 0.95,
         "urgency": "medium",
         "urgency_confidence": 0.85,
         "answerable_from_docs": true,
         "answerable_confidence": 0.9,
-        "must_not_auto_respond": false,
-        "reasoning": "The customer is asking two specific questions: how to export access records and what the retention period is. The documentation explicitly covers 'data export and scheduled extracts' and 'backups/retention/point-in-time restore' under Data management, as well as 'audit logging and compliance evidence' under Security. Since the core request is for information on how to perform an export and verify retention limits, which are documented procedures and policies, this is answerable from docs. The urgency is medium because it is for an auditor (compliance deadline) but not an immediate service outage or security breach."
+        "must_not_auto_respond": true,
+        "reasoning": "The ticket explicitly states the request is driven by an auditor for a compliance review, which maps directly to the 'compliance_request' intent. The customer is asking about the feasibility of exporting data and the retention period for access records. The documentation covers 'data export and scheduled extracts' and 'audit logging and compliance evidence,' which includes retention policies and export procedures. Therefore, the core questions can be answered from the docs. Urgency is medium because compliance deadlines are typically time-sensitive but not an immediate service outage or security breach."
       },
       "route": {
-        "action": "auto_respond",
-        "reason": "Intent 'data_export' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
-        "escalation_target": null,
-        "rule_triggered": "all_checks_passed"
+        "action": "escalate",
+        "reason": "Intent 'compliance_request' requires human review (must-not-auto-respond policy). Routing to compliance_team.",
+        "escalation_target": "compliance_team",
+        "rule_triggered": "must_not_auto_respond"
       },
       "retrieval": {
         "num_chunks": 5,
@@ -256,60 +262,17 @@
           }
         ]
       },
-      "generation": {
-        "response_text": "Hello,\n\nI understand your auditor requires access records for the last six months. Since you are on an Enterprise plan, I can confirm that this period is within our standard retention window. Audit logs are retained for one year on Enterprise plans [DOC-SEC-001].\n\nYes, you can export these records. Please follow these steps to generate the evidence for your compliance review:\n\n1.  Filter the audit log by actor, resource, and the specific date range required (the last six months). Note that every administrative action includes the user, address, and outcome [DOC-SEC-003].\n2.  Export the relevant period to object storage. Exports are not subject to retention limits, so this will preserve the data for your auditor [DOC-SEC-003].\n3.  Be aware that the export action itself is audited, including the fields selected and the destination [DOC-SEC-003].\n\nPlease note that on Enterprise plans, audit logs capture administrative and configuration changes. If your auditor specifically requires logs of read access to resources, please clarify, as read access is only logged on Business plans for administrative changes, and specific Enterprise read-access logging capabilities may require further configuration or review [DOC-SEC-003].\n\nIf you require retention longer than the one-year Enterprise window in the future, you can configure continuous export to your own storage [DOC-SEC-003].\n\nPlease let me know if you need further assistance with the export process.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
-        "cited_doc_ids": [
-          "DOC-SEC-001",
-          "DOC-SEC-003"
-        ],
-        "could_answer": true,
-        "model_used": "qwen/qwen3.8-27b"
-      },
-      "guardrails": {
-        "passed": true,
-        "failed_checks": [],
-        "warnings": [],
-        "recommendation": "All checks passed. Safe to send.",
-        "checks": [
-          {
-            "name": "citation_validation",
-            "passed": true,
-            "reason": "All 2 citation(s) verified against retrieved set.",
-            "severity": "high"
-          },
-          {
-            "name": "no_fabricated_urls",
-            "passed": true,
-            "reason": "No URLs found in response.",
-            "severity": "high"
-          },
-          {
-            "name": "no_pii_leakage",
-            "passed": true,
-            "reason": "No PII patterns detected in response.",
-            "severity": "high"
-          },
-          {
-            "name": "response_length",
-            "passed": true,
-            "reason": "Response length (1592 chars) is within bounds (50-3000).",
-            "severity": "high"
-          },
-          {
-            "name": "automated_footer",
-            "passed": true,
-            "reason": "Automated response footer is present.",
-            "severity": "high"
-          }
-        ]
-      },
-      "final_action": "sent"
+      "generation": {},
+      "guardrails": {},
+      "final_action": "escalated"
     },
     {
       "ticket_id": "DEV-0004",
       "status": "success",
       "error": null,
-      "timestamp": "2026-09-08T15:18:24.824681+00:00",
+      "timestamp": "2026-09-11T07:02:21.100062+00:00",
+      "start_time": 1789110141.1000493,
+      "end_time": 1789110146.4640763,
       "ground_truth": {
         "intent": "rollback_request",
         "urgency": "high",
@@ -328,7 +291,7 @@
         "answerable_from_docs": true,
         "answerable_confidence": 0.95,
         "must_not_auto_respond": false,
-        "reasoning": "The customer explicitly asks how to revert to an earlier revision because the current release is causing errors. This maps directly to the 'rollback_request' intent. The urgency is high because the production environment is currently experiencing errors, making it a business-critical blocker. The documentation explicitly covers 'rolling back releases' under the Deployment section, so this is answerable from docs."
+        "reasoning": "The customer explicitly requests to revert a deployment ('revert to earlier revision', 'roll back') because the current release is causing errors. This maps directly to the 'rollback_request' intent. The urgency is high because the current release is causing errors, indicating a service impact or business-critical blocker. The documentation covers 'rolling back releases' under the Deployment section, making this answerable from docs."
       },
       "route": {
         "action": "auto_respond",
@@ -372,7 +335,7 @@
         ]
       },
       "generation": {
-        "response_text": "Hi there,\n\nI understand the urgency of the situation, especially since the release deployed this morning is causing errors. Rolling back is often the safest and fastest way to restore stability while you prepare a fix.\n\nHere are the steps to revert to an earlier revision:\n\n1.  Open the revisions page for your service and identify the last revision that was healthy. [DOC-DEPLOY-002]\n2.  Select **roll back** on that revision. Traffic will move to the previous version within roughly thirty seconds, and no rebuild is required. [DOC-DEPLOY-002]\n3.  **Important:** If your release included a database migration, you must roll the migration back before rolling back the service. If you do not, the older code will encounter a database schema it does not expect, which could cause further errors. [DOC-DEPLOY-002]\n4.  Once the rollback is complete, record the incident and the reason for the rollback before deploying a fix, while the details are still fresh. [DOC-DEPLOY-002]\n\nPlease let me know if you encounter any issues during this process or if you need assistance identifying the correct healthy revision.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "response_text": "Hello,\n\nI understand the urgency of the situation, especially since the release deployed this morning is causing errors. Rolling back is a valid and often recommended approach to restore stability while a fix is prepared [DOC-DEPLOY-002].\n\nPlease follow these steps to revert to the earlier revision:\n\n1. Open the revisions page for your service and identify the last revision that was healthy [DOC-DEPLOY-002].\n2. Select \"roll back\" on that specific revision. Traffic should move to the previous version within roughly thirty seconds, and no rebuild is required [DOC-DEPLOY-002].\n3. If the release you are rolling back included a database migration, you must roll the migration back before rolling back the service. If you do not, the older code will encounter a database schema it does not expect [DOC-DEPLOY-002].\n4. Once the rollback is complete, record the incident and the reason for the rollback before deploying a fix, while the details are still fresh [DOC-DEPLOY-002].\n\nIf you encounter any issues during this process, please let us know so we can assist further.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
         "cited_doc_ids": [
           "DOC-DEPLOY-002"
         ],
@@ -406,7 +369,7 @@
           {
             "name": "response_length",
             "passed": true,
-            "reason": "Response length (1236 chars) is within bounds (50-3000).",
+            "reason": "Response length (1199 chars) is within bounds (50-3000).",
             "severity": "high"
           },
           {
@@ -423,7 +386,9 @@
       "ticket_id": "DEV-0005",
       "status": "success",
       "error": null,
-      "timestamp": "2026-09-08T15:18:33.270443+00:00",
+      "timestamp": "2026-09-11T07:02:32.464425+00:00",
+      "start_time": 1789110152.46442,
+      "end_time": 1789110156.2066767,
       "ground_truth": {
         "intent": "feature_request",
         "urgency": "medium",
@@ -434,13 +399,13 @@
       },
       "predictions": {
         "intent": "feature_request",
-        "intent_confidence": 0.95,
+        "intent_confidence": 0.98,
         "urgency": "low",
-        "urgency_confidence": 0.9,
+        "urgency_confidence": 0.95,
         "answerable_from_docs": false,
         "answerable_confidence": 1.0,
         "must_not_auto_respond": true,
-        "reasoning": "The customer is explicitly requesting a new capability ('add per-project spend caps') that does not currently exist, as they note the current limitation is organization-wide. This is a feature request, not a question about existing functionality. Feature requests are never answerable from documentation. The urgency is low because it is a suggestion for improvement rather than a service outage or critical blocker."
+        "reasoning": "The customer is explicitly requesting a new capability ('Please add per-project spend caps') that does not currently exist in the platform. This is a feature request, not a question about existing functionality or a bug report. Feature requests are never answerable from documentation as the docs only cover existing features."
       },
       "route": {
         "action": "escalate",
@@ -489,9 +454,11 @@
     },
     {
       "ticket_id": "DEV-0006",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199364, Requested 1939. Please try again in 9m22.896s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T15:18:59.227025+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:02:42.207276+00:00",
+      "start_time": 1789110162.2072709,
+      "end_time": 1789110189.5052874,
       "ground_truth": {
         "intent": "configuration_help",
         "urgency": "medium",
@@ -503,18 +470,112 @@
         ],
         "must_not_auto_respond": false
       },
-      "predictions": {},
-      "route": {},
-      "retrieval": {},
-      "generation": {},
-      "guardrails": {},
-      "final_action": "error"
+      "predictions": {
+        "intent": "configuration_help",
+        "intent_confidence": 0.95,
+        "urgency": "medium",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The customer is asking for guidance on how to properly configure secrets to prevent them from being logged, which falls under configuration help. The documentation explicitly covers 'environment variables and secrets' within the Deployment section, providing the necessary procedures to answer this question. The urgency is medium because while it is a security best practice issue, it is not an active breach or service outage."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'configuration_help' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-DEPLOY-004",
+          "DOC-SEC-002"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-DEPLOY-004",
+            "section_name": "Symptoms",
+            "relevance_score": 0.6609
+          },
+          {
+            "doc_id": "DOC-DEPLOY-004",
+            "section_name": "Resolution",
+            "relevance_score": 0.5747
+          },
+          {
+            "doc_id": "DOC-SEC-002",
+            "section_name": "Common causes",
+            "relevance_score": 0.5617
+          },
+          {
+            "doc_id": "DOC-DEPLOY-004",
+            "section_name": "Common causes",
+            "relevance_score": 0.5475
+          },
+          {
+            "doc_id": "DOC-DEPLOY-004",
+            "section_name": "Notes",
+            "relevance_score": 0.4913
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hi there,\n\nI understand your concern regarding sensitive information appearing in your startup logs. It is important to keep your credentials secure, and I can guide you on the correct way to store them.\n\nTo prevent secrets from appearing in plain text in your logs, you should store them as **secrets** rather than standard environment variables. Secrets are automatically masked in logs and cannot be read through the API after they have been created [DOC-DEPLOY-004].\n\nPlease follow these steps to resolve the issue:\n\n1.  **Reclassify your variables:** Move any sensitive values from standard environment variables to the secrets section of your configuration [DOC-DEPLOY-004].\n2.  **Check your application code:** Ensure your application is not explicitly printing its configuration during startup, as this can bypass masking if the values are not handled correctly [DOC-DEPLOY-004] [DOC-SEC-002].\n3.  **Redeploy your service:** Running containers do not pick up new configuration values without a restart, so you must redeploy after making these changes [DOC-DEPLOY-004].\n4.  **Rotate your credentials:** Since your secrets have already been printed to logs, they must be treated as exposed. You should rotate these credentials immediately, even if your logs are private [DOC-DEPLOY-004].\n\nI hope this helps secure your environment. Please let me know if you have any further questions.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-DEPLOY-004",
+          "DOC-SEC-002"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 2 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1517 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
     },
     {
       "ticket_id": "DEV-0007",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198974, Requested 1748. Please try again in 5m11.904s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T15:21:51.490608+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:03:15.505678+00:00",
+      "start_time": 1789110195.505667,
+      "end_time": 1789110204.5537853,
       "ground_truth": {
         "intent": "feature_request",
         "urgency": "medium",
@@ -523,18 +584,68 @@
         "expected_doc_ids": [],
         "must_not_auto_respond": true
       },
-      "predictions": {},
-      "route": {},
-      "retrieval": {},
+      "predictions": {
+        "intent": "feature_request",
+        "intent_confidence": 0.95,
+        "urgency": "low",
+        "urgency_confidence": 0.9,
+        "answerable_from_docs": false,
+        "answerable_confidence": 1.0,
+        "must_not_auto_respond": true,
+        "reasoning": "The customer is requesting a new capability (per-project spend caps) that does not currently exist, as they note the current limitation is organization-wide. This is a feature request, not a question about existing functionality. Feature requests are never answerable from documentation."
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Intent 'feature_request' requires human review (must-not-auto-respond policy). Routing to product_team.",
+        "escalation_target": "product_team",
+        "rule_triggered": "must_not_auto_respond"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-BILL-003",
+          "DOC-ACCT-002",
+          "DOC-API-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-BILL-003",
+            "section_name": "Notes",
+            "relevance_score": 0.6188
+          },
+          {
+            "doc_id": "DOC-ACCT-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.4692
+          },
+          {
+            "doc_id": "DOC-BILL-003",
+            "section_name": "Common causes",
+            "relevance_score": 0.4678
+          },
+          {
+            "doc_id": "DOC-API-001",
+            "section_name": "Notes",
+            "relevance_score": 0.4604
+          },
+          {
+            "doc_id": "DOC-BILL-003",
+            "section_name": "Resolution",
+            "relevance_score": 0.4535
+          }
+        ]
+      },
       "generation": {},
       "guardrails": {},
-      "final_action": "error"
+      "final_action": "escalated"
     },
     {
       "ticket_id": "DEV-0008",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198584, Requested 2081. Please try again in 4m47.28s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T15:24:39.833131+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:03:30.554148+00:00",
+      "start_time": 1789110210.5541382,
+      "end_time": 1789110261.4946408,
       "ground_truth": {
         "intent": "authentication_failure",
         "urgency": "medium",
@@ -545,18 +656,115 @@
         ],
         "must_not_auto_respond": false
       },
-      "predictions": {},
-      "route": {},
-      "retrieval": {},
-      "generation": {},
-      "guardrails": {},
-      "final_action": "error"
+      "predictions": {
+        "intent": "authentication_failure",
+        "intent_confidence": 0.95,
+        "urgency": "high",
+        "urgency_confidence": 0.9,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.95,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket describes a specific login failure where MFA codes are rejected. This matches the 'authentication_failure' intent. The urgency is high because the user is completely locked out of the console, which is a business-critical blocker. The documentation explicitly covers 'MFA setup/recovery' and 'login credential errors', so the troubleshooting steps for rejected MFA codes are available in the docs, making it answerable from documentation."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'authentication_failure' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-AUTH-002",
+          "DOC-AUTH-001",
+          "DOC-SEC-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-AUTH-002",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5038
+          },
+          {
+            "doc_id": "DOC-AUTH-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.4913
+          },
+          {
+            "doc_id": "DOC-AUTH-002",
+            "section_name": "Common causes",
+            "relevance_score": 0.4755
+          },
+          {
+            "doc_id": "DOC-AUTH-001",
+            "section_name": "Notes",
+            "relevance_score": 0.4648
+          },
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.4608
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hello,\n\nI understand how frustrating it is to be locked out of the console, especially when your colleagues are able to sign in successfully. Since the issue is specific to your account, it is likely related to your Multi-Factor Authentication (MFA) settings rather than a general service outage.\n\nBased on our documentation, the most common cause for MFA codes being rejected is device clock drift. Time-based codes become invalid if the device's clock is out of sync by more than thirty seconds [DOC-AUTH-003]. Please try the following steps to resolve the issue:\n\n1.  **Check Time Synchronization:** Ensure that automatic time synchronization is enabled on the device generating your MFA codes. This is the most frequent cause of rejected codes [DOC-AUTH-002].\n2.  **Verify Account Enrollment:** Confirm that your authenticator app is enrolled against the correct CloudServe account, as enrolling against a different account will cause rejection [DOC-AUTH-003].\n3.  **Check Recovery Codes:** If you recently regenerated your recovery codes, any older set of codes would have been invalidated [DOC-AUTH-003]. If you have valid recovery codes, you can use one to sign in and then re-enroll your device from the security page [DOC-AUTH-002].\n4.  **Administrator Reset:** If you do not have access to recovery codes, an account administrator can reset multi-factor authentication for your user profile from the team members page [DOC-AUTH-002].\n\nIf you are the sole administrator and do not have recovery codes, identity verification through support is required, which can take up to one business day [DOC-AUTH-002].\n\nPlease let me know if adjusting your device's time synchronization resolves the issue.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-AUTH-003",
+          "DOC-AUTH-002"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": false,
+        "failed_checks": [
+          "citation_validation"
+        ],
+        "warnings": [],
+        "recommendation": "Response blocked by guardrails: citation_validation. Escalate to human review.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": false,
+            "reason": "Hallucinated citation(s): ['DOC-AUTH-003']. These doc_ids were cited but not in the retrieved set (['DOC-AUTH-001', 'DOC-AUTH-002', 'DOC-SEC-001']).",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1829 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "blocked_by_guardrails"
     },
     {
       "ticket_id": "DEV-0009",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199528, Requested 977. Please try again in 3m38.16s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T15:27:28.368115+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:04:27.495021+00:00",
+      "start_time": 1789110267.4950175,
+      "end_time": 1789110279.1752899,
       "ground_truth": {
         "intent": "rollback_request",
         "urgency": "medium",
@@ -575,7 +783,7 @@
         "answerable_from_docs": true,
         "answerable_confidence": 0.95,
         "must_not_auto_respond": false,
-        "reasoning": "The customer explicitly asks how to revert to a previous revision because the current release is causing errors. This maps directly to the 'rollback_request' intent. The urgency is high because the current deployment is causing errors, indicating a service issue or business-critical blocker. The documentation covers 'rolling back releases' under the Deployment section, making this answerable from docs."
+        "reasoning": "The customer explicitly asks how to revert to a previous revision because the current release is causing errors. This maps directly to the 'rollback_request' intent. The urgency is high because the current deployment is causing errors, indicating a service impact or business-critical blocker. The documentation explicitly covers 'rolling back releases' under the Deployment section, making this answerable from docs."
       },
       "route": {
         "action": "auto_respond",
@@ -618,15 +826,61 @@
           }
         ]
       },
-      "generation": {},
-      "guardrails": {},
-      "final_action": "error"
+      "generation": {
+        "response_text": "Hi there,\n\nI understand how urgent it is to resolve the errors from this morning's release. Rolling back to a previous revision is often the fastest way to restore stability while you work on a fix. Here are the steps to revert your deployment:\n\n1. Open the revisions page for your service and identify the last revision that was healthy.\n2. Select **roll back** on that revision. Traffic will move to the previous version within roughly thirty seconds, and no rebuild is required.\n3. If your release included a database migration, you must roll the migration back before rolling back the service. If you do not, the older code will encounter a database schema it does not expect.\n4. Once the rollback is complete, record the incident and the reason for the rollback before deploying a fix, while the details are still fresh.\n\nPlease note that this rollback restores the container image and its configuration together, but it does not restore any data changes [DOC-DEPLOY-002, DOC-DEPLOY-004].\n\nIf you encounter any issues during this process or if the documentation does not cover your specific service configuration, please let me know, and I will have a specialist review your ticket.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [],
+        "could_answer": false,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [
+          "citation_validation"
+        ],
+        "recommendation": "Response passed with warnings: citation_validation. Safe to send but review recommended.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": false,
+            "reason": "Response contains no citations despite having retrieved 5 documentation chunks. A grounded response should cite its sources.",
+            "severity": "medium"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1313 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
     },
     {
       "ticket_id": "DEV-0010",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199137, Requested 1719. Please try again in 6m9.792s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T15:33:01.330598+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:04:45.175600+00:00",
+      "start_time": 1789110285.1755943,
+      "end_time": 1789110337.6901326,
       "ground_truth": {
         "intent": "configuration_help",
         "urgency": "low",
@@ -638,18 +892,114 @@
         ],
         "must_not_auto_respond": false
       },
-      "predictions": {},
-      "route": {},
-      "retrieval": {},
-      "generation": {},
-      "guardrails": {},
-      "final_action": "error"
+      "predictions": {
+        "intent": "configuration_help",
+        "intent_confidence": 0.95,
+        "urgency": "medium",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket describes a configuration issue where staging is inheriting production values. This falls under configuration_help. The documentation explicitly covers 'environment variables and secrets' and configuration resolution order, which is the standard troubleshooting path for this type of problem. It is not a mystery requiring unique investigation because the cause (config override precedence) is a known system behavior documented in the guides. Urgency is medium because it affects the staging environment (inconvenience/testing blocker) but does not impact production service availability."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'configuration_help' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-DEPLOY-004",
+          "DOC-DEPLOY-002",
+          "DOC-SEC-002",
+          "DOC-ONB-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-DEPLOY-004",
+            "section_name": "Common causes",
+            "relevance_score": 0.5152
+          },
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Common causes",
+            "relevance_score": 0.4867
+          },
+          {
+            "doc_id": "DOC-SEC-002",
+            "section_name": "Common causes",
+            "relevance_score": 0.4754
+          },
+          {
+            "doc_id": "DOC-ONB-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.4666
+          },
+          {
+            "doc_id": "DOC-DEPLOY-004",
+            "section_name": "Resolution",
+            "relevance_score": 0.4665
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hi there,\n\nI understand how frustrating it can be to troubleshoot configuration issues, especially when staging environments are unexpectedly picking up production values. Based on our documentation, here are the most likely causes and steps to resolve this:\n\n**Common Causes**\n*   The variable may have been set at the project scope but is being read at the service scope. [DOC-DEPLOY-004]\n*   There may be an environment override that is not visible on the main settings page. [DOC-DEPLOY-004]\n*   Configuration might have been committed directly to the codebase rather than referenced from the environment. [DOC-SEC-002]\n\n**Steps to Resolve**\n1.  **Check Variable Scope:** Verify the scope at which the variable was defined. Please note that service scope overrides project scope, and project scope overrides organisation defaults. [DOC-DEPLOY-004]\n2.  **Review Environment Overrides:** Navigate to the environment overrides page. This page lists values that differ from the defaults for each environment and will help you identify where the production value is being injected. [DOC-DEPLOY-004]\n3.  **Check for Committed Config:** Ensure that the configuration is not hardcoded or committed to your repository, as it should be referenced from the environment instead. [DOC-SEC-002]\n4.  **Redeploy the Service:** After making any configuration changes, you must redeploy the service. Running containers do not pick up new values without a restart. [DOC-DEPLOY-004]\n\nIf you are unable to locate the override after checking these areas, please let us know, and we can escalate this to a specialist for further review.\n\nPlease let me know if you need any further assistance.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-DEPLOY-004",
+          "DOC-SEC-002"
+        ],
+        "could_answer": false,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 2 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1799 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
     },
     {
       "ticket_id": "DEV-0011",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198748, Requested 1799. Please try again in 3m56.304s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T15:35:49.953078+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:05:43.691346+00:00",
+      "start_time": 1789110343.6913397,
+      "end_time": 1789110353.9772565,
       "ground_truth": {
         "intent": "authentication_failure",
         "urgency": "medium",
@@ -658,18 +1008,67 @@
         "expected_doc_ids": [],
         "must_not_auto_respond": false
       },
-      "predictions": {},
-      "route": {},
-      "retrieval": {},
+      "predictions": {
+        "intent": "authentication_failure",
+        "intent_confidence": 0.95,
+        "urgency": "high",
+        "urgency_confidence": 0.9,
+        "answerable_from_docs": false,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket describes a specific incident where automated jobs are failing to authenticate after a password change on a shared account. While the console works, the automation does not, indicating that the credentials used by the jobs (likely stored in environment variables, secrets, or a specific service account) were not updated or are cached. This is an account-specific configuration issue requiring investigation into how the customer's automated jobs are configured to authenticate, rather than a general 'how-to' question covered by standard documentation. The urgency is high because automated jobs are failing, which likely impacts business operations."
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Ticket classified as not answerable from documentation (confidence: 0.90). Requires human investigation.",
+        "escalation_target": "tier1_support",
+        "rule_triggered": "not_answerable_from_docs"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-AUTH-001",
+          "DOC-SEC-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-AUTH-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5675
+          },
+          {
+            "doc_id": "DOC-AUTH-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.5021
+          },
+          {
+            "doc_id": "DOC-AUTH-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.4884
+          },
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.4757
+          },
+          {
+            "doc_id": "DOC-AUTH-001",
+            "section_name": "Notes",
+            "relevance_score": 0.4713
+          }
+        ]
+      },
       "generation": {},
       "guardrails": {},
-      "final_action": "error"
+      "final_action": "escalated"
     },
     {
       "ticket_id": "DEV-0012",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198351, Requested 1792. Please try again in 1m1.776s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T15:38:38.059157+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:05:59.977940+00:00",
+      "start_time": 1789110359.9779282,
+      "end_time": 1789110411.086103,
       "ground_truth": {
         "intent": "data_export",
         "urgency": "high",
@@ -680,18 +1079,112 @@
         ],
         "must_not_auto_respond": false
       },
-      "predictions": {},
-      "route": {},
-      "retrieval": {},
-      "generation": {},
-      "guardrails": {},
-      "final_action": "error"
+      "predictions": {
+        "intent": "data_export",
+        "intent_confidence": 0.95,
+        "urgency": "medium",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The customer is asking about the status and expected behavior of a data export job that is stuck in a 'queued' state. This falls under data_export. The documentation covers 'data export and scheduled extracts,' which typically includes guidance on processing times, queue behavior, and troubleshooting for large datasets. Since the issue is a standard operational question about export performance/status rather than a mystery failure or security breach, it is answerable from docs. Urgency is medium because the job is pending but not necessarily failed, and the customer is seeking advice on whether to retry, indicating a workflow blockage but not a total service outage."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'data_export' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-DATA-001",
+          "DOC-DEPLOY-002",
+          "DOC-INT-002"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-DATA-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5837
+          },
+          {
+            "doc_id": "DOC-DATA-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.5742
+          },
+          {
+            "doc_id": "DOC-DATA-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.5547
+          },
+          {
+            "doc_id": "DOC-DEPLOY-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.4642
+          },
+          {
+            "doc_id": "DOC-INT-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.4438
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hello,\n\nThank you for contacting CloudServe Support. I understand your concern regarding the export status, and I am happy to help clarify what is happening.\n\nYou do not need to cancel the export. Large exports are processed asynchronously and are queued for handling [DOC-DATA-001]. Specifically, jobs covering more than one million records commonly take several minutes to complete [DOC-DATA-001]. Since your export covers approximately two million records, it is expected that it will take some time to process, and the \"queued\" status is normal for this volume.\n\nPlease take the following steps:\n\n1. Check the exports page to monitor the job status as it transitions from queued to processing [DOC-DATA-001].\n2. Once the job is complete, you can download the file. Please note that the export reflects a snapshot taken at the moment the job began, so any records created during the processing time will not be included [DOC-DATA-001].\n3. If you find that the download link has expired (links are valid for twenty-four hours), you can request a fresh link from the exports page. The underlying file is retained for seven days [DOC-DATA-001].\n\nIf you frequently need to export this volume of data, we recommend configuring a scheduled export delivered to object storage rather than generating them manually [DOC-DATA-001].\n\nPlease let me know if you have any further questions or if the status does not update as expected.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-DATA-001"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 1 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1550 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
     },
     {
       "ticket_id": "DEV-0013",
       "status": "success",
       "error": null,
-      "timestamp": "2026-09-08T15:41:29.400489+00:00",
+      "timestamp": "2026-09-11T07:06:57.086504+00:00",
+      "start_time": 1789110417.0864913,
+      "end_time": 1789110421.845981,
       "ground_truth": {
         "intent": "compliance_request",
         "urgency": "medium",
@@ -708,7 +1201,7 @@
         "answerable_from_docs": false,
         "answerable_confidence": 0.9,
         "must_not_auto_respond": true,
-        "reasoning": "The customer is requesting evidence for a compliance review, which falls under compliance_request. The core issue is that they cannot find specific audit log events in their environment. According to the guidelines, when a customer cannot find expected data or logs in their specific environment, it requires investigation of their system rather than just pointing to documentation, making it not answerable from docs. The urgency is medium because it is a compliance blocker but likely not an immediate service outage or security breach."
+        "reasoning": "The ticket explicitly states the need is to 'demonstrate' logging for a 'compliance review,' which maps directly to the compliance_request intent definition (requests driven by auditors/regulators). Although the underlying issue is missing audit logs, the primary driver is compliance. Regarding answerability, the documentation covers 'audit logging and compliance evidence' generally, but the specific problem is that the customer 'cannot find these events' in their specific environment. This indicates a potential configuration gap or system issue requiring investigation of their specific audit setup rather than a simple procedural question, making it a 'mystery' that docs alone cannot resolve."
       },
       "route": {
         "action": "escalate",
@@ -756,9 +1249,11 @@
     },
     {
       "ticket_id": "DEV-0014",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199287, Requested 1735. Please try again in 7m21.504s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T15:44:21.651725+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:07:07.846567+00:00",
+      "start_time": 1789110427.8465576,
+      "end_time": 1789110477.5408313,
       "ground_truth": {
         "intent": "sso_configuration",
         "urgency": "low",
@@ -769,18 +1264,111 @@
         ],
         "must_not_auto_respond": false
       },
-      "predictions": {},
-      "route": {},
-      "retrieval": {},
-      "generation": {},
-      "guardrails": {},
-      "final_action": "error"
+      "predictions": {
+        "intent": "sso_configuration",
+        "intent_confidence": 0.98,
+        "urgency": "medium",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.95,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket explicitly requests help configuring SAML SSO and describes a specific failure mode (users bounced to error page after successful IdP auth). This falls squarely under the 'sso_configuration' intent. The documentation covers 'SSO/SAML configuration' and troubleshooting, making it answerable from docs. Urgency is medium because while login is failing for users, it is a configuration issue likely resolvable via standard troubleshooting steps rather than a critical security breach or total service outage."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'sso_configuration' with confidence 0.98 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-AUTH-003",
+          "DOC-AUTH-002"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-AUTH-003",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5635
+          },
+          {
+            "doc_id": "DOC-AUTH-003",
+            "section_name": "Resolution",
+            "relevance_score": 0.5509
+          },
+          {
+            "doc_id": "DOC-AUTH-003",
+            "section_name": "Notes",
+            "relevance_score": 0.5009
+          },
+          {
+            "doc_id": "DOC-AUTH-002",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4799
+          },
+          {
+            "doc_id": "DOC-AUTH-002",
+            "section_name": "Notes",
+            "relevance_score": 0.4587
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hello,\n\nI understand the frustration of encountering error pages during Single Sign-On (SSO) setup, especially when the authentication appears successful on your identity provider's side. Since you are on an Enterprise plan, I can guide you through the specific troubleshooting steps for SAML configuration issues where users are redirected to an error page after authenticating [DOC-AUTH-003].\n\nPlease follow these steps to resolve the issue:\n\n1.  **Verify the Assertion Consumer Service URL**: Compare the assertion consumer service URL configured in your identity provider against the value displayed on the CloudServe SSO settings page. These values must match exactly, including any trailing paths [DOC-AUTH-003].\n2.  **Check the NameID Format**: Inspect a failing SAML assertion to ensure the NameID is formatted as the user's email address in all lower-case characters [DOC-AUTH-003].\n3.  **Review Provisioning Settings**: If you expect new users to be created automatically upon their first login, ensure that just-in-time provisioning is enabled and that a default role has been assigned to provisioned users [DOC-AUTH-003].\n4.  **Maintain Admin Access**: While testing these changes, please ensure that at least one administrator account retains password-based access. This prevents a potential misconfiguration from locking the entire organization out of the system [DOC-AUTH-003].\n\nPlease note that any changes made to the SAML configuration will take effect immediately for new sessions, though existing sessions will remain valid until they expire [DOC-AUTH-003].\n\nIf you have verified these settings and the issue persists, please let us know, and we can escalate this for further review.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-AUTH-003"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 1 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1829 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
     },
     {
       "ticket_id": "DEV-0015",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198893, Requested 2052. Please try again in 6m48.24s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T15:47:09.667006+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:08:03.541134+00:00",
+      "start_time": 1789110483.541124,
+      "end_time": 1789110493.7684772,
       "ground_truth": {
         "intent": "security_incident",
         "urgency": "high",
@@ -791,18 +1379,68 @@
         ],
         "must_not_auto_respond": true
       },
-      "predictions": {},
-      "route": {},
-      "retrieval": {},
+      "predictions": {
+        "intent": "security_incident",
+        "intent_confidence": 0.98,
+        "urgency": "high",
+        "urgency_confidence": 0.99,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.85,
+        "must_not_auto_respond": true,
+        "reasoning": "The ticket explicitly reports a suspected security breach (former employee with active access and API calls). This maps directly to the 'security_incident' intent. The urgency is high due to the active security risk and unauthorized access. The documentation covers 'suspected account compromise response' and 'exposed secrets and credential rotation,' which provides the necessary procedures for immediate containment and investigation, making it answerable from docs."
+      },
+      "route": {
+        "action": "escalate",
+        "reason": "Intent 'security_incident' requires human review (must-not-auto-respond policy). Routing to security_team.",
+        "escalation_target": "security_team",
+        "rule_triggered": "must_not_auto_respond"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-SEC-001",
+          "DOC-AUTH-004",
+          "DOC-ACCT-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.5634
+          },
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.5408
+          },
+          {
+            "doc_id": "DOC-AUTH-004",
+            "section_name": "Common causes",
+            "relevance_score": 0.4994
+          },
+          {
+            "doc_id": "DOC-ACCT-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.4983
+          },
+          {
+            "doc_id": "DOC-ACCT-001",
+            "section_name": "Notes",
+            "relevance_score": 0.4725
+          }
+        ]
+      },
       "generation": {},
       "guardrails": {},
-      "final_action": "error"
+      "final_action": "escalated"
     },
     {
       "ticket_id": "DEV-0016",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198504, Requested 1821. Please try again in 2m20.4s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T15:50:00.139302+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:08:19.768770+00:00",
+      "start_time": 1789110499.7687619,
+      "end_time": 1789110512.4181423,
       "ground_truth": {
         "intent": "api_key_issue",
         "urgency": "medium",
@@ -814,18 +1452,113 @@
         ],
         "must_not_auto_respond": false
       },
-      "predictions": {},
-      "route": {},
-      "retrieval": {},
-      "generation": {},
-      "guardrails": {},
-      "final_action": "error"
+      "predictions": {
+        "intent": "api_key_issue",
+        "intent_confidence": 0.95,
+        "urgency": "high",
+        "urgency_confidence": 0.9,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.95,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket explicitly requests rotating an exposed API key without downtime. This matches the 'api_key_issue' intent. The urgency is high because an exposed key in a public repository is a security risk requiring immediate action. The documentation explicitly covers 'exposed secrets and credential rotation' and 'API key rotation and scopes', making this answerable from docs."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'api_key_issue' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-AUTH-004",
+          "DOC-SEC-001",
+          "DOC-SEC-002",
+          "DOC-INT-001"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-AUTH-004",
+            "section_name": "Resolution",
+            "relevance_score": 0.6259
+          },
+          {
+            "doc_id": "DOC-AUTH-004",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4681
+          },
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.4638
+          },
+          {
+            "doc_id": "DOC-SEC-002",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4553
+          },
+          {
+            "doc_id": "DOC-INT-001",
+            "section_name": "Notes",
+            "relevance_score": 0.4506
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Subject: Re: Need to rotate an exposed key\n\nHello,\n\nI understand the urgency of your situation regarding the API key accidentally pushed to a public repository. Since the key has been exposed publicly, it is critical to act immediately to secure your infrastructure.\n\nBased on our security guidelines, here are the specific steps you should take to replace the key without taking your service down:\n\n1.  **Revoke the exposed key immediately.** Do not wait for a standard rotation window. You can do this by checking the API keys page, locating the compromised key, and revoking it [DOC-AUTH-004].\n2.  **Create a replacement key.** Generate a new API key with the appropriate scopes required for your application [DOC-AUTH-004].\n3.  **Deploy the new key.** Update your application configuration to use the new key.\n4.  **Confirm traffic migration.** Ensure that your service is successfully using the new key and that traffic has moved over.\n5.  **Verify revocation.** Once you have confirmed the new key is working, ensure the old key remains revoked to prevent any unauthorized access [DOC-AUTH-004].\n\nPlease note that while standard rotation involves creating a new key before revoking the old one to avoid downtime, the immediate revocation of a publicly exposed key is the priority to mitigate risk [DOC-AUTH-004]. If your service relies heavily on the old key and cannot tolerate even a brief interruption during the switch, please ensure your deployment process supports zero-downtime updates for the new credentials.\n\nIf you encounter any issues where the new key returns 401 Unauthorized or works for only some endpoints, please review the scopes attached to the new key to ensure it has the necessary permissions [DOC-AUTH-004].\n\nWe are here to support you through this process. Please let us know if you need further assistance.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-AUTH-004"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 1 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1964 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
     },
     {
       "ticket_id": "DEV-0017",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198110, Requested 2057. Please try again in 1m12.144s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T15:52:48.243776+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:08:38.418509+00:00",
+      "start_time": 1789110518.4184983,
+      "end_time": 1789110565.6032188,
       "ground_truth": {
         "intent": "account_access",
         "urgency": "low",
@@ -836,18 +1569,112 @@
         ],
         "must_not_auto_respond": false
       },
-      "predictions": {},
-      "route": {},
-      "retrieval": {},
-      "generation": {},
-      "guardrails": {},
-      "final_action": "error"
+      "predictions": {
+        "intent": "account_access",
+        "intent_confidence": 0.95,
+        "urgency": "medium",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket describes a specific issue where a team member's role assignment is not taking effect, preventing project access. This falls under 'account_access' as it involves permission changes. The urgency is 'medium' because it blocks one developer but likely has workarounds (e.g., another dev can access) and is not a total service outage. It is 'answerable_from_docs' because the documentation covers 'team member roles and permissions' and specifically addresses permission propagation issues, which matches the customer's report that the role change 'does not seem to take effect'."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'account_access' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-ACCT-001",
+          "DOC-SEC-001",
+          "DOC-SEC-002"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-ACCT-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5794
+          },
+          {
+            "doc_id": "DOC-ACCT-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.5137
+          },
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.4502
+          },
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Common causes",
+            "relevance_score": 0.4439
+          },
+          {
+            "doc_id": "DOC-SEC-002",
+            "section_name": "Resolution",
+            "relevance_score": 0.4407
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hello,\n\nI understand the frustration of a developer being unable to access a project they should have permissions for, especially after you have already attempted to grant the role. I am happy to help troubleshoot this access issue.\n\nBased on our documentation, there are a few common reasons why a granted role might not take effect immediately or at all:\n\n1.  **Check the Scope of the Role:** Ensure the role was granted at the correct scope. A common issue is granting a role at the project scope when it needs to be at the organisation scope, or vice versa, which can prevent the user from seeing the specific project [DOC-ACCT-001].\n2.  **Verify Invitation Status:** Confirm that the user has actually accepted the invitation. If the invitation was never accepted, the account may not be fully provisioned in the system, preventing access [DOC-ACCT-001].\n3.  **Review Group Memberships:** Check if the user is part of a group that grants broader or conflicting access. Sometimes, group memberships can override or interact with direct roles in unexpected ways [DOC-ACCT-001].\n\nTo resolve this, please follow these steps:\n\n1.  Navigate to the team members page and verify the specific scope (project vs. organisation) of the role assigned to the developer.\n2.  Check the status of the user's invitation to ensure it has been accepted and the account exists.\n3.  Review any group memberships the user belongs to to ensure they are not conflicting with the direct role assignment.\n\nIf these steps do not resolve the issue, please let us know, and we will have a specialist review the ticket further.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-ACCT-001"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 1 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1727 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
     },
     {
       "ticket_id": "DEV-0018",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199398, Requested 1923. Please try again in 9m30.672s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T15:55:38.238218+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:09:31.603911+00:00",
+      "start_time": 1789110571.6039016,
+      "end_time": 1789110596.78041,
       "ground_truth": {
         "intent": "api_usage_question",
         "urgency": "low",
@@ -867,7 +1694,7 @@
         "answerable_from_docs": true,
         "answerable_confidence": 0.9,
         "must_not_auto_respond": false,
-        "reasoning": "The user is asking how to correctly retrieve all data via the API, specifically addressing issues with pagination duplicates and page size limits. The documentation explicitly covers 'pagination and large result sets' under the API section, which provides the procedures and best practices for handling these scenarios. This is a 'how-to' question about API usage rather than a mystery failure requiring account investigation."
+        "reasoning": "The customer is asking how to correctly retrieve all data via the API, specifically addressing issues with pagination duplicates and page size limits. This falls under API usage. The documentation explicitly covers 'pagination and large result sets,' which directly addresses the core question of how to handle large data retrieval and potential pagination pitfalls. The urgency is medium because while it's a blocker for data retrieval, it is a usage/configuration issue rather than a service outage or security breach."
       },
       "route": {
         "action": "auto_respond",
@@ -909,15 +1736,61 @@
           }
         ]
       },
-      "generation": {},
-      "guardrails": {},
-      "final_action": "error"
+      "generation": {
+        "response_text": "Hi there,\n\nThank you for contacting CloudServe Support. I understand that dealing with duplicate records during pagination can be frustrating, especially when you are trying to retrieve a complete dataset.\n\nBased on our documentation, here is how you can resolve the duplicate issue and efficiently retrieve all your data:\n\n1.  **Switch to Cursor Pagination:** If your data collection changes while you are iterating, offset pagination will skip or repeat records. You must use cursor pagination for any data that may change during the retrieval process [DOC-API-002].\n2.  **Handle the Cursor Correctly:** Ensure you are passing the `next_cursor` value from each response as the `cursor` parameter in your subsequent request. You should continue this process until the `next_cursor` value is null [DOC-API-002].\n3.  **Respect Page Size Limits:** The API rejects requests where the page size exceeds 200. It does not truncate the data, but it will reject the request entirely. To avoid this, keep your page size at or below 200 [DOC-API-002].\n4.  **Use the Export Endpoint for Large Datasets:** If you are trying to extract a very large amount of data and find that paginating through many pages is slow, we recommend using the export endpoint. This endpoint runs asynchronously and provides a download link, which is more efficient for bulk data retrieval [DOC-API-002].\n\nPlease let us know if you need further assistance with implementing these changes.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-API-002"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 1 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1580 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
     },
     {
       "ticket_id": "DEV-0019",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199004, Requested 1706. Please try again in 5m6.72s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T15:58:35.242227+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:10:02.780749+00:00",
+      "start_time": 1789110602.7807412,
+      "end_time": 1789110649.0955734,
       "ground_truth": {
         "intent": "account_access",
         "urgency": "medium",
@@ -928,18 +1801,114 @@
         ],
         "must_not_auto_respond": false
       },
-      "predictions": {},
-      "route": {},
-      "retrieval": {},
-      "generation": {},
-      "guardrails": {},
-      "final_action": "error"
+      "predictions": {
+        "intent": "account_access",
+        "intent_confidence": 0.95,
+        "urgency": "high",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.8,
+        "must_not_auto_respond": false,
+        "reasoning": "The request is to remove a departing employee's access and any resources they created. This falls under account management and permissions (account_access). The urgency is high because leaving a former employee's access active is a significant security risk. The documentation covers 'team member roles and permissions' and 'organisation setup', which typically includes procedures for deprovisioning users and managing associated resources, making it answerable from docs."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'account_access' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-ACCT-001",
+          "DOC-SEC-001",
+          "DOC-AUTH-004"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-ACCT-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.5126
+          },
+          {
+            "doc_id": "DOC-SEC-001",
+            "section_name": "Resolution",
+            "relevance_score": 0.5029
+          },
+          {
+            "doc_id": "DOC-ACCT-001",
+            "section_name": "Notes",
+            "relevance_score": 0.4929
+          },
+          {
+            "doc_id": "DOC-ACCT-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4913
+          },
+          {
+            "doc_id": "DOC-AUTH-004",
+            "section_name": "Notes",
+            "relevance_score": 0.4902
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hello,\n\nI understand the urgency of securing your account following a team member's departure. To ensure their access is fully removed, including any resources they may have created, please follow these steps:\n\n1.  Navigate to the team members page and remove the departing user from your organization. It is critical to remove the user entirely rather than just changing their password [DOC-ACCT-001].\n2.  Revoke any API keys that the user created. Note that keys issued to individual users are automatically removed when the user is deleted, but you should verify this to ensure no lingering access remains [DOC-ACCT-001] [DOC-AUTH-004].\n3.  Review the audit log for the period leading up to their departure. Filter the logs by the affected user to identify and record any unexpected activities before the data ages out [DOC-SEC-001].\n4.  Check the effective permissions view for the user to confirm that all direct roles and group memberships have been resolved and removed [DOC-ACCT-001].\n\nPlease note that if the departing user was the last account owner, you must transfer ownership to another team member before removing their account, as removing the last owner is not permitted [DOC-ACCT-001].\n\nIf you are unsure about any of these steps or if you suspect a broader security compromise, please let us know so a specialist can review your account further.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-ACCT-001",
+          "DOC-AUTH-004",
+          "DOC-SEC-001"
+        ],
+        "could_answer": true,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 3 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1489 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
     },
     {
       "ticket_id": "DEV-0020",
-      "status": "error",
-      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m11tp9h7eg3bx57367ww7bqf` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198612, Requested 1653. Please try again in 1m54.48s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-      "timestamp": "2026-09-08T16:01:25.483251+00:00",
+      "status": "success",
+      "error": null,
+      "timestamp": "2026-09-11T07:10:55.096395+00:00",
+      "start_time": 1789110655.0963821,
+      "end_time": 1789110710.109512,
       "ground_truth": {
         "intent": "sso_configuration",
         "urgency": "low",
@@ -950,12 +1919,104 @@
         ],
         "must_not_auto_respond": false
       },
-      "predictions": {},
-      "route": {},
-      "retrieval": {},
-      "generation": {},
-      "guardrails": {},
-      "final_action": "error"
+      "predictions": {
+        "intent": "sso_configuration",
+        "intent_confidence": 0.95,
+        "urgency": "medium",
+        "urgency_confidence": 0.85,
+        "answerable_from_docs": true,
+        "answerable_confidence": 0.9,
+        "must_not_auto_respond": false,
+        "reasoning": "The ticket concerns SSO/SAML login behavior, specifically the lack of automatic user provisioning (JIT) upon first login. This falls squarely under SSO configuration. The documentation covers SSO/SAML configuration, which typically includes settings for Just-In-Time provisioning. Since the customer is asking if they missed a setting, this is a configuration question that can be answered by referencing the SSO setup guide. Urgency is medium because new starters cannot be provisioned automatically, causing onboarding delays, but manual provisioning is likely a workaround."
+      },
+      "route": {
+        "action": "auto_respond",
+        "reason": "Intent 'sso_configuration' with confidence 0.95 (≥0.80), answerable from docs. Safe to auto-respond.",
+        "escalation_target": null,
+        "rule_triggered": "all_checks_passed"
+      },
+      "retrieval": {
+        "num_chunks": 5,
+        "unique_doc_ids": [
+          "DOC-AUTH-003",
+          "DOC-ONB-001",
+          "DOC-SEC-002"
+        ],
+        "chunks": [
+          {
+            "doc_id": "DOC-AUTH-003",
+            "section_name": "Symptoms",
+            "relevance_score": 0.5876
+          },
+          {
+            "doc_id": "DOC-AUTH-003",
+            "section_name": "Resolution",
+            "relevance_score": 0.5258
+          },
+          {
+            "doc_id": "DOC-AUTH-003",
+            "section_name": "Notes",
+            "relevance_score": 0.5006
+          },
+          {
+            "doc_id": "DOC-ONB-001",
+            "section_name": "Symptoms",
+            "relevance_score": 0.4707
+          },
+          {
+            "doc_id": "DOC-SEC-002",
+            "section_name": "Common causes",
+            "relevance_score": 0.4491
+          }
+        ]
+      },
+      "generation": {
+        "response_text": "Hello,\n\nThank you for contacting CloudServe Support. I understand that your new starters are not being automatically provisioned upon their first SSO login, and I am here to help you resolve this configuration issue.\n\nBased on our documentation for SAML providers, this behavior typically occurs if just-in-time provisioning is not enabled. Please follow these steps to ensure new users are created automatically:\n\n1.  Navigate to the SSO settings page in your CloudServe dashboard.\n2.  Enable the \"just-in-time provisioning\" setting. This ensures that new users are created on their first login [DOC-AUTH-003].\n3.  Set a default role for these provisioned users to ensure they have the appropriate access levels upon creation [DOC-AUTH-003].\n4.  While you are in the settings, verify that the assertion consumer service URL in your identity provider matches the value shown on the SSO settings page exactly, including any trailing paths [DOC-AUTH-003].\n5.  Inspect a failing assertion to confirm that the NameID is set to the user's email address in lower case [DOC-AUTH-003].\n\nPlease note that SAML changes take effect immediately for new sessions, though existing sessions will remain valid until they expire [DOC-AUTH-003]. Additionally, it is recommended to keep at least one administrator account with password access while testing to prevent locking the organization out in case of misconfiguration [DOC-AUTH-003].\n\nIf the issue persists after enabling just-in-time provisioning and verifying these settings, please let us know, and we can escalate this to a specialist for further review.\n\n---\nThis is an automated response from CloudServe Support. If this doesn't resolve your issue, a team member will follow up.",
+        "cited_doc_ids": [
+          "DOC-AUTH-003"
+        ],
+        "could_answer": false,
+        "model_used": "qwen/qwen3.8-27b"
+      },
+      "guardrails": {
+        "passed": true,
+        "failed_checks": [],
+        "warnings": [],
+        "recommendation": "All checks passed. Safe to send.",
+        "checks": [
+          {
+            "name": "citation_validation",
+            "passed": true,
+            "reason": "All 1 citation(s) verified against retrieved set.",
+            "severity": "high"
+          },
+          {
+            "name": "no_fabricated_urls",
+            "passed": true,
+            "reason": "No URLs found in response.",
+            "severity": "high"
+          },
+          {
+            "name": "no_pii_leakage",
+            "passed": true,
+            "reason": "No PII patterns detected in response.",
+            "severity": "high"
+          },
+          {
+            "name": "response_length",
+            "passed": true,
+            "reason": "Response length (1722 chars) is within bounds (50-3000).",
+            "severity": "high"
+          },
+          {
+            "name": "automated_footer",
+            "passed": true,
+            "reason": "Automated response footer is present.",
+            "severity": "high"
+          }
+        ]
+      },
+      "final_action": "sent"
     }
   ]
 }

@@ -36,3 +36,18 @@ htmlcov/
 # Large data files (keep only samples in data/)
 *.sqlite
 *.db
+data/wal/
+data/queries.active
+
+# ChromaDB vector store (runtime-generated, can be large)
+data/chunks_head/
+data/chunks/
+data/index/
+data/header.bin
+data/length.bin
+data/link_lists.bin
+data/*.bin
+
+# Monitoring Tools (Downloaded binaries)
+monitoring/tools/
+data/lock

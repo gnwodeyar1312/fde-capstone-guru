@@ -63,6 +63,7 @@ import time
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 # Ensure project root is on path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -76,6 +77,11 @@ from src.generate import generate_response
 from src.guardrails import validate_response
 from src.pipeline import run_ticket, get_pipeline
 from src.logging_store import init_database, log_decision, build_decision_record, get_summary_stats
+from src.metrics import (
+    start_metrics_server,
+    record_rate_limit,
+    record_routing_metrics,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +102,7 @@ def _wait_with_backoff(attempt: int, base_delay: float = 5.0, max_delay: float =
     import random
     delay = min(base_delay * (2 ** attempt) + random.uniform(0, 2), max_delay)
     logger.info("Rate limited. Waiting %.1f seconds (attempt %d)...", delay, attempt + 1)
+    record_rate_limit("llm", delay)
     time.sleep(delay)
 
 
@@ -213,6 +220,7 @@ def process_ticket(ticket_data, ticket_index: int, total: int, llm=None) -> dict
                 "escalation_target": route.escalation_target,
                 "rule_triggered": route.rule_triggered,
             }
+            record_routing_metrics(route, ground_truth=result["ground_truth"])
 
         # Extract generation results (only for auto_respond)
         generation = pipeline_state.get("generation")
@@ -277,18 +285,23 @@ def process_ticket(ticket_data, ticket_index: int, total: int, llm=None) -> dict
 # Main harness
 # ---------------------------------------------------------------------------
 
-def run_harness(input_path: str, output_path: str) -> dict:
+def run_harness(input_path: str, output_path: str, metrics_port: Optional[int] = 8000) -> dict:
     """
     Run the full evaluation harness.
 
     Args:
         input_path: Path to the input tickets JSON file
         output_path: Path to write the output results JSON file
+        metrics_port: Optional port to expose Prometheus metrics (None to disable)
 
     Returns:
         Summary statistics dict
     """
     start_time = time.time()
+
+    # Start Prometheus metrics server for live monitoring
+    if metrics_port:
+        start_metrics_server(port=metrics_port)
 
     # Validate configuration
     logger.info("Validating configuration...")
@@ -467,6 +480,17 @@ def main():
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         help="Logging level (default: INFO)",
     )
+    parser.add_argument(
+        "--metrics-port",
+        type=int,
+        default=8000,
+        help="Port to expose live Prometheus metrics (default: 8000)",
+    )
+    parser.add_argument(
+        "--no-metrics",
+        action="store_true",
+        help="Disable live Prometheus metrics server",
+    )
 
     args = parser.parse_args()
 
@@ -477,9 +501,11 @@ def main():
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
+    metrics_port = None if args.no_metrics else args.metrics_port
+
     # Run the harness
     try:
-        summary = run_harness(args.input, args.output)
+        summary = run_harness(args.input, args.output, metrics_port=metrics_port)
         logger.info("Harness completed successfully.")
         sys.exit(0)
     except Exception as e:
