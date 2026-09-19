@@ -51,3 +51,12 @@ data/*.bin
 # Monitoring Tools (Downloaded binaries)
 monitoring/tools/
 data/lock
+
+# Video files (too large for git)
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# Submission ZIP
+*.zip

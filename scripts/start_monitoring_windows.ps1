@@ -5,7 +5,9 @@
 .DESCRIPTION
     1. Downloads portable standalone Windows releases of Prometheus & Grafana if not already present.
     2. Configures Prometheus to use monitoring/prometheus/prometheus.yml.
-    3. Launches Prometheus (:9090) and Grafana (:3000) in separate terminal windows.
+    3. Copies provisioning configs (datasource + dashboard) into Grafana's conf directory
+       with paths fixed for local (non-Docker) use.
+    4. Launches Prometheus (:9090) and Grafana (:3000) in separate terminal windows.
 #>
 
 param (
@@ -56,23 +58,96 @@ if (-not (Test-Path $grafanaExe)) {
     Write-Host "Grafana is already downloaded." -ForegroundColor Green
 }
 
+# 3. Set up Grafana provisioning for local use
+Write-Host "`nConfiguring Grafana provisioning..." -ForegroundColor Yellow
+
+# Create provisioning directories inside Grafana
+$grafProvDS = Join-Path $grafanaDir "conf\provisioning\datasources"
+$grafProvDB = Join-Path $grafanaDir "conf\provisioning\dashboards"
+$grafDashDir = Join-Path $grafanaDir "dashboards"
+
+New-Item -ItemType Directory -Path $grafProvDS -Force | Out-Null
+New-Item -ItemType Directory -Path $grafProvDB -Force | Out-Null
+New-Item -ItemType Directory -Path $grafDashDir -Force | Out-Null
+
+# Write datasource config pointing to localhost (not Docker hostname)
+$datasourceYml = @"
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://localhost:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: 2s
+      httpMethod: POST
+"@
+Set-Content -Path (Join-Path $grafProvDS "datasource.yml") -Value $datasourceYml -Encoding UTF8
+
+# Write dashboard provisioning config with local path
+$dashboardPath = $grafDashDir -replace '\\', '/'
+$dashboardYml = @"
+apiVersion: 1
+
+providers:
+  - name: "CloudServe Dashboards"
+    orgId: 1
+    folder: "CloudServe"
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: $dashboardPath
+"@
+Set-Content -Path (Join-Path $grafProvDB "dashboards.yml") -Value $dashboardYml -Encoding UTF8
+
+# Copy the actual dashboard JSON
+$srcDashboard = Join-Path $rootDir "monitoring\grafana\dashboards\cloudserve_support_system.json"
+if (Test-Path $srcDashboard) {
+    Copy-Item -Path $srcDashboard -Destination $grafDashDir -Force
+    Write-Host "Dashboard JSON copied." -ForegroundColor Green
+} else {
+    Write-Host "WARNING: Dashboard JSON not found at $srcDashboard" -ForegroundColor Red
+}
+
+Write-Host "Provisioning configured." -ForegroundColor Green
+
 if ($DownloadOnly) {
     Write-Host "Downloads complete." -ForegroundColor Green
     exit 0
 }
 
-# 3. Launch Prometheus
+# 4. Kill any existing Prometheus/Grafana processes
+Get-Process -Name "prometheus" -ErrorAction SilentlyContinue | Stop-Process -Force
+Get-Process -Name "grafana-server" -ErrorAction SilentlyContinue | Stop-Process -Force
+Start-Sleep -Seconds 1
+
+# 5. Launch Prometheus
 $promConfig = Join-Path $rootDir "monitoring\prometheus\prometheus.yml"
 Write-Host "`nStarting Prometheus on http://localhost:9090..." -ForegroundColor Yellow
 Start-Process -FilePath $promExe -ArgumentList "--config.file=`"$promConfig`" --web.listen-address=0.0.0.0:9090"
 
-# 4. Launch Grafana
+# 6. Launch Grafana
 Write-Host "Starting Grafana on http://localhost:3000..." -ForegroundColor Yellow
 $grafanaHome = $grafanaDir
 Start-Process -FilePath $grafanaExe -WorkingDirectory $grafanaDir -ArgumentList "--homepath=`"$grafanaHome`""
 
-Write-Host "`nMonitoring stack is running!" -ForegroundColor Green
+# 7. Wait and verify
+Write-Host "`nWaiting for services to start..." -ForegroundColor Yellow
+Start-Sleep -Seconds 5
+
+Write-Host "`n========================================" -ForegroundColor Green
+Write-Host " Monitoring stack is running!" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
 Write-Host " - Prometheus UI:     http://localhost:9090" -ForegroundColor Cyan
 Write-Host " - Grafana Dashboard: http://localhost:3000 (admin / admin)" -ForegroundColor Cyan
-Write-Host "`nYou can now run:" -ForegroundColor White
-Write-Host "  python scripts/simulate_traffic.py --count 20 --delay 2.0" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "IMPORTANT: Start your FastAPI app first so metrics appear:" -ForegroundColor Yellow
+Write-Host "  python -m uvicorn src.api:app --host 0.0.0.0 --port 8000" -ForegroundColor White
+Write-Host ""
+Write-Host "Then generate traffic:" -ForegroundColor Yellow
+Write-Host "  python scripts/simulate_traffic.py --count 20 --delay 2.0" -ForegroundColor White
